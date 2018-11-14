@@ -59,15 +59,19 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="OpenNi2andNiTe2PropertySheet.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="OpenNi2andNiTe2PropertySheet.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="OpenNi2andNiTe2PropertySheet.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="OpenNi2andNiTe2PropertySheet.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -91,11 +95,19 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>C:\opencv\opencv\build\include;C:\glut;$(NITE2_INCLUDE);$(OPENNI2_INCLUDE);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\opencv\opencv\build\x64\vc15\lib;C:\glut;$(NITE2_LIB);$(OPENNI2_LIB);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenNI2.lib;NiTE2.lib;glut32.lib;opencv_core343.lib;opencv_imgproc343.lib;opencv_highgui343.lib;opencv_ml343.lib;opencv_video343.lib;opencv_features2d343.lib;opencv_calib3d343.lib;opencv_objdetect249.lib;opencv_contrib249.lib;opencv_legacy249.lib;opencv_flann249.lib;opencv_gpu249.lib;opencv_nonfree249.lib;opencv_ocl249.lib;opencv_photo249.lib;opencv_videostab249.lib;opencv_stitching249.lib;opencv_superres249.lib;opencv_ts249.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "%OPENNI2_REDIST%*" "$(OutDir)" /y /s /e /i /d
+xcopy "%NITE2_REDIST%*" "$(OutDir)" /y /s /e /i /d
+xcopy "C:\glut\glut32.dll" "$(OutDir)" /y /d</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -106,11 +118,20 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>C:\opencv\opencv\build\include;c:\glut;$(OPENNI2_INCLUDE64);$(OPENCV_DIR)\include;$(NITE2_INCLUDE64);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\opencv\opencv\build\x64\vc15\lib;C:\glut;$(NITE2_LIB64);$(OPENNI2_LIB64);$(OPENCV_DIR)\x64\vc15\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenNI2.lib;NiTE2.lib;glut64.lib;opencv_world343d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "%OPENNI2_REDIST64%*" "$(OutDir)" /y /s /e /i /d
+xcopy "%NITE2_REDIST64%*" "$(OutDir)" /y /s /e /i /d
+xcopy "C:\glut\glut64.dll" "$(OutDir)" /y /d
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -123,13 +144,21 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>C:\glut;$(NITE2_INCLUDE);$(OPENNI2_INCLUDE);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\glut;$(NITE2_LIB);$(OPENNI2_LIB);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenNI2.lib;NiTE2.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "%OPENNI2_REDIST%*" "$(OutDir)" /y /s /e /i /d
+xcopy "%NITE2_REDIST%*" "$(OutDir)" /y /s /e /i /d
+xcopy "C:\glut\glut32.dll" "$(OutDir)" /y /d</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -142,18 +171,30 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>C:\opencv\opencv\build\include;c:\glut;$(OPENNI2_INCLUDE64);$(NITE2_INCLUDE64);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\opencv\opencv\build\x64\vc15\lib;C:\glut;$(NITE2_LIB64);$(OPENNI2_LIB64);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenNI2.lib;NiTE2.lib;glut64.lib;opencv_world343.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "%OPENNI2_REDIST64%*" "$(OutDir)" /y /s /e /i /d
+xcopy "%NITE2_REDIST64%*" "$(OutDir)" /y /s /e /i /d
+xcopy "C:\glut\glut64.dll" "$(OutDir) /y /d
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MatHeader.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Segmentation.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="glutpractice.cpp" />
     <ClCompile Include="OpenNI2_Practice.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
