@@ -48,7 +48,7 @@ protected:
 	unsigned short CausalMeanArray[5]; //grabs 5 values simultaneously
 
 public:
-	void Segmenting(Mat LoadedImage)
+	Mat Segmenting(Mat LoadedImage)
 	{
 		namedWindow("1. Loaded img", WINDOW_AUTOSIZE);
 		imshow("1. Loaded img", LoadedImage);
@@ -141,19 +141,9 @@ public:
 
 						str1_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
 						//print label into the image
-						cv::putText(Roi, str1_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);//????
+						cv::putText(Roi, str1_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);//????
 
 						//----------------------------------
-						//block_matrix.printToScreen();
-						//cout << endl;
-
-
-						/*std::cout << "FIRST BLOCK. New object at pixels: " << windows.y << " , " << windows.x << endl;
-						std::cout << "Object Number: " << objcounter << endl;
-						std::cout << "Average distance of this object: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << endl;
-						std::cout << endl;*/
 
 						//print the average value into the image
 						//after all the cases, print the label of the cell and its average value
@@ -250,17 +240,7 @@ public:
 							//create string with the label to print 
 
 							str1_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							cv::putText(Roi, str1_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-
-
-							//objsquares = 0;  //FOR LATER, WHEN MORE COMPLEX
-							/*std::cout << "R1 block. New object at pixels: " << windows.y << " , " << windows.x << endl;
-							std::cout << "Object Number: " << objcounter << endl;
-							std::cout << "Average distance of this object: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << endl;
-							std::cout << endl;*/
+							cv::putText(Roi, str1_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
@@ -276,24 +256,8 @@ public:
 							ostringstream str_LEFT_label, str_LEFT_detect;
 							str_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
 							//				str_LEFT_detect << "L"; //indicates that it's similar to the one on the left
-							cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
+							cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 							//				cv::putText(Roi, str_LEFT_detect.str(), cv::Point(20, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.3, cv::Scalar(255, 255, 255), 1, 8, false);
-
-
-							//print new label of the object
-							/*std::cout << "One of the first blocks. Block is assigned left object's label: " << getLabelLEFT << endl;
-
-							std::cout << "Object at pixels: " << windows.y << " , " << windows.x;
-							std::cout << endl;
-							std::cout << "Similar to the one at pixels: " << windowLeft.y << " , " << windowLeft.x;
-							std::cout << endl;
-							std::cout << endl;
-
-							std::cout << "Average distance of this BLOCK: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << "Average distance of this OBJECT: " << block_matrix.get_average_distance_block_row_cols(blockrowLeft, blockcolLeft) << endl;
-							std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << endl;
-							std::cout << endl;*/
 
 							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
@@ -393,15 +357,8 @@ public:
 							block_matrix.set_label_block_row_cols(blockrow, blockcol, objcounter);
 							//create string with the label to print 
 							str1_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							cv::putText(Roi, str1_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
+							cv::putText(Roi, str1_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
-
-							/*std::cout << "R2 C1. New object at pixels: " << windows.y << " , " << windows.x << endl;
-							std::cout << "Object Number: " << objcounter << endl;
-							std::cout << "Average distance of this object: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << endl;
-							std::cout << endl;*/
 							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
@@ -419,23 +376,8 @@ public:
 
 							ostringstream str_UP_label, str_UP_detect;
 							str_UP_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							cv::putText(Roi, str_UP_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
+							cv::putText(Roi, str_UP_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
-
-							//print new label of the object
-							/*std::cout << "Row 2, column 1 block. Block is assigned upper object's label: " << getLabelUP << endl;
-
-							std::cout << "Object at pixels: " << windows.y << " , " << windows.x;
-							std::cout << endl;
-							std::cout << "Similar to the one at pixels: " << windowUp.y << " , " << windowUp.x;
-							std::cout << endl;
-							std::cout << endl;
-
-							std::cout << "Average distance of this BLOCK: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << "Average distance of this OBJECT: " << block_matrix.get_average_distance_block_row_cols(blockrowUp, blockcolUp) << endl;
-							std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << endl;
-							std::cout << endl;*/
 							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 
@@ -596,14 +538,7 @@ public:
 						//create string with the label to print
 
 						str1_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-						cv::putText(Roi, str1_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						/*std::cout << "New object at pixels: " << windows.y << " , " << windows.x << endl;
-						std::cout << "Object Number: " << objcounter << endl;
-						std::cout << "Average distance of this object: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << endl;
-						std::cout << endl;*/
+						cv::putText(Roi, str1_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
@@ -638,23 +573,7 @@ public:
 							ostringstream str_LEFT_label, str_LEFT_detect;
 							str_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
 
-							cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							//print new label of the object
-							/*std::cout << "All three around similar. Label of any of them (left): " << getLabelLEFT << endl;
-							std::cout << "Hence, block is assigned label: " << getLabelLEFT << endl;
-
-							std::cout << "Object at pixels: " << windows.y << " , " << windows.x;
-							std::cout << endl;
-							std::cout << "Similar to the one at pixels: " << windowLeft.y << " , " << windowLeft.x;
-							std::cout << endl;
-							std::cout << endl;
-
-							std::cout << "Average distance of this BLOCK: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << "Average distance of this OBJECT: " << block_matrix.get_average_distance_block_row_cols(blockrowLeft, blockcolLeft) << endl;
-							std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << endl;
-							std::cout << endl;*/
+							cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
@@ -673,23 +592,8 @@ public:
 							ostringstream str_UP_UPLEFT_label, str_UP_UPLEFT_detect;
 							str_UP_UPLEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
 							//			str_UP_UPLEFT_detect << "UUL";
-							cv::putText(Roi, str_UP_UPLEFT_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
+							cv::putText(Roi, str_UP_UPLEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
-							//print new label of the object
-							/*std::cout << "All three around similar. Majority with label at UP/UPLEFT: " << getLabelUP_UPLEFT << endl;
-							std::cout << "Hence, block is assigned label: " << getLabelUP_UPLEFT << endl;
-
-							std::cout << "Object at pixels: " << windows.y << " , " << windows.x;
-							std::cout << endl;
-							std::cout << "Similar to the one at pixels: " << windowUpLeft.y << " , " << windowUpLeft.x;
-							std::cout << endl;
-							std::cout << endl;
-
-							std::cout << "Average distance of this BLOCK: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << "Average distance of this OBJECT: " << block_matrix.get_average_distance_block_row_cols(blockrowUpLeft, blockcolUpLeft) << endl;
-							std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << endl;
-							std::cout << endl;*/
 							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
@@ -707,24 +611,8 @@ public:
 							ostringstream str_UPLEFT_LEFT_label, str_UPLEFT_LEFT_detect;
 							str_UPLEFT_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
 
-							cv::putText(Roi, str_UPLEFT_LEFT_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
+							cv::putText(Roi, str_UPLEFT_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
-
-							//print new label of the object
-							/*std::cout << "All three around similar. Majority with label at LEFT/UPLEFT: " << getLabelUPLEFT_LEFT << endl;
-							std::cout << "Hence, block is assigned label: " << getLabelUPLEFT_LEFT << endl;
-
-							std::cout << "Object at pixels: " << windows.y << " , " << windows.x;
-							std::cout << endl;
-							std::cout << "Similar to the one at pixels: " << windowLeft.y << " , " << windowLeft.x;
-							std::cout << endl;
-							std::cout << endl;
-
-							std::cout << "Average distance of this BLOCK: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << "Average distance of this OBJECT: " << block_matrix.get_average_distance_block_row_cols(blockrowUpLeft, blockcolUpLeft) << endl;
-							std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << endl;
-							std::cout << endl;*/
 							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
@@ -742,25 +630,9 @@ public:
 							ostringstream str_UP_LEFT_label, str_UP_LEFT_detect;
 							str_UP_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
 							//			str_UP_LEFT_detect << "U-L";
-							cv::putText(Roi, str_UP_LEFT_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
+							cv::putText(Roi, str_UP_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 							//			cv::putText(Roi, str_UP_LEFT_detect.str(), cv::Point(20, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.3, cv::Scalar(255, 255, 255), 1, 8, false);
 
-
-							//print new label of the object
-							/*std::cout << "All three around similar. Majority with label at LEFT/UP: " << getLabelUP_LEFT << endl;
-							std::cout << "Hence, block is assigned label: " << getLabelUP_LEFT << endl;
-
-							std::cout << "Object at pixels: " << windows.y << " , " << windows.x;
-							std::cout << endl;
-							std::cout << "Similar to the one at pixels: " << windowLeft.y << " , " << windowLeft.x;
-							std::cout << endl;
-							std::cout << endl;
-
-							std::cout << "Average distance of this BLOCK: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << "Average distance of this OBJECT: " << block_matrix.get_average_distance_block_row_cols(blockrowLeft, blockcolLeft) << endl;
-							std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << endl;
-							std::cout << endl;*/
 							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
@@ -777,25 +649,9 @@ public:
 							ostringstream str_LEFT_label, str_LEFT_detect;
 							str_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
 							//			str_LEFT_detect << "all";
-							cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
+							cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 							//			cv::putText(Roi, str_LEFT_detect.str(), cv::Point(20, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.3, cv::Scalar(255, 255, 255), 1, 8, false);
 
-
-							//print new label of the object
-							/*std::cout << "All three around similar. Lbls different. Assigned lbl of LEFT: " << getLabelLEFT << endl;
-							std::cout << "Hence, block is assigned label: " << getLabelLEFT << endl;
-
-							std::cout << "Object at pixels: " << windows.y << " , " << windows.x;
-							std::cout << endl;
-							std::cout << "Similar to the one at pixels: " << windowLeft.y << " , " << windowLeft.x;
-							std::cout << endl;
-							std::cout << endl;
-
-							std::cout << "Average distance of this BLOCK: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << "Average distance of this OBJECT: " << block_matrix.get_average_distance_block_row_cols(blockrowLeft, blockcolLeft) << endl;
-							std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-							std::cout << endl;
-							std::cout << endl;*/
 							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
@@ -815,23 +671,8 @@ public:
 						ostringstream str_LEFT_label, str_LEFT_detect;
 						str_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
 
-						cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
+						cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
-						//print new label of the object
-						/*std::cout << "All three around different. By default then assigned label of LEFT: " << getLabelLEFT << endl;
-						std::cout << "Hence, block is assigned label: " << getLabelLEFT << endl;
-
-						std::cout << "Object at pixels: " << windows.y << " , " << windows.x;
-						std::cout << endl;
-						std::cout << "Similar to the one at pixels: " << windowLeft.y << " , " << windowLeft.x;
-						std::cout << endl;
-						std::cout << endl;
-
-						std::cout << "Average distance of this BLOCK: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << "Average distance of this OBJECT: " << block_matrix.get_average_distance_block_row_cols(blockrowLeft, blockcolLeft) << endl;
-						std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << endl;
-						std::cout << endl;*/
 						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 						int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
@@ -848,25 +689,9 @@ public:
 						ostringstream str_Up_label, str_Up_detect;
 						str_Up_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
 						//				str_Up_detect << "ulu";
-						cv::putText(Roi, str_Up_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
+						cv::putText(Roi, str_Up_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 						//				cv::putText(Roi, str_Up_detect.str(), cv::Point(20, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.3, cv::Scalar(255, 255, 255), 1, 8, false);
 
-
-						//print new label of the object
-						/*std::cout << "All three around different. By default then assigned label of LEFT: " << getLabelUp << endl;
-						std::cout << "Hence, block is assigned label: " << getLabelUp << endl;
-
-						std::cout << "Object at pixels: " << windows.y << " , " << windows.x;
-						std::cout << endl;
-						std::cout << "Similar to the one at pixels: " << windowUp.y << " , " << windowUp.x;
-						std::cout << endl;
-						std::cout << endl;
-
-						std::cout << "Average distance of this BLOCK: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << "Average distance of this OBJECT: " << block_matrix.get_average_distance_block_row_cols(blockrowUp, blockcolUp) << endl;
-						std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << endl;
-						std::cout << endl;*/
 						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 						int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
@@ -883,25 +708,9 @@ public:
 						ostringstream str_LEFT_label, str_LEFT_detect;
 						str_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
 						//					str_LEFT_detect << "lul";
-						cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
+						cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 						//					cv::putText(Roi, str_LEFT_detect.str(), cv::Point(20, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.3, cv::Scalar(255, 255, 255), 1, 8, false);
 
-
-						//print new label of the object
-						/*std::cout << "All three around different. By default then assigned label of LEFT: " << getLabelLEFT << endl;
-						std::cout << "Hence, block is assigned label: " << getLabelLEFT << endl;
-
-						std::cout << "Object at pixels: " << windows.y << " , " << windows.x;
-						std::cout << endl;
-						std::cout << "Similar to the one at pixels: " << windowLeft.y << " , " << windowLeft.x;
-						std::cout << endl;
-						std::cout << endl;
-
-						std::cout << "Average distance of this BLOCK: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << "Average distance of this OBJECT: " << block_matrix.get_average_distance_block_row_cols(blockrowLeft, blockcolLeft) << endl;
-						std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << endl;
-						std::cout << endl;*/
 						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 						int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
@@ -917,24 +726,8 @@ public:
 						ostringstream str_LEFT_label, str_LEFT_detect;
 						str_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
 
-						cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
+						cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
-
-						//print new label of the object
-						/*std::cout << "All three around different. By default then assigned label of LEFT: " << getLabelLEFT << endl;
-						std::cout << "Hence, block is assigned label: " << getLabelLEFT << endl;
-
-						std::cout << "Object at pixels: " << windows.y << " , " << windows.x;
-						std::cout << endl;
-						std::cout << "Similar to the one at pixels: " << windowLeft.y << " , " << windowLeft.x;
-						std::cout << endl;
-						std::cout << endl;
-
-						std::cout << "Average distance of this BLOCK: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << "Average distance of this OBJECT: " << block_matrix.get_average_distance_block_row_cols(blockrowLeft, blockcolLeft) << endl;
-						std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << endl;
-						std::cout << endl;*/
 						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 						int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
@@ -950,23 +743,8 @@ public:
 						ostringstream str_UPLEFT_label, str_UPLEFT_detect;
 						str_UPLEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
 
-						cv::putText(Roi, str_UPLEFT_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
+						cv::putText(Roi, str_UPLEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
-						//print new label of the object
-						/*std::cout << "Similar to the UPLEFT block: " << getLabelUPLEFT << endl;
-						std::cout << "Hence, block is assigned label: " << getLabelUPLEFT << endl;
-
-						std::cout << "Object at pixels: " << windows.y << " , " << windows.x;
-						std::cout << endl;
-						std::cout << "Similar to the one at pixels: " << windowUpLeft.y << " , " << windowUpLeft.x;
-						std::cout << endl;
-						std::cout << endl;
-
-						std::cout << "Average distance of this BLOCK: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << "Average distance of this OBJECT: " << block_matrix.get_average_distance_block_row_cols(blockrowUpLeft, blockcolUpLeft) << endl;
-						std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << endl;
-						std::cout << endl;*/
 						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 						int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
@@ -982,24 +760,8 @@ public:
 						ostringstream str_UP_label, str_UP_detect;
 						str_UP_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
 
-						cv::putText(Roi, str_UP_label.str(), cv::Point(7, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
+						cv::putText(Roi, str_UP_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
-
-						//print new label of the object
-						/*std::cout << "Similar to the UPLEFT block: " << getLabelUP << endl;
-						std::cout << "Hence, block is assigned label: " << getLabelUP << endl;
-
-						std::cout << "Object at pixels: " << windows.y << " , " << windows.x;
-						std::cout << endl;
-						std::cout << "Similar to the one at pixels: " << windowUp.y << " , " << windowUp.x;
-						std::cout << endl;
-						std::cout << endl;
-
-						std::cout << "Average distance of this BLOCK: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << "Average distance of this OBJECT: " << block_matrix.get_average_distance_block_row_cols(blockrowUp, blockcolUp) << endl;
-						std::cout << "Assigned label: " << block_matrix.get_label_block_row_cols(blockrow, blockcol) << endl;
-						std::cout << endl;
-						std::cout << endl;*/
 						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
 
 						int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
@@ -1036,6 +798,8 @@ public:
 				std::cout << size_array[i] << "-";
 		}
 		std::cout << endl;
+
+		return DrawResultGrid;
 	}//end segmenting()
 
 	void update_image(Mat DrawResultHere, Mat DrawResultGrid) {
