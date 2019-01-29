@@ -19,7 +19,7 @@
 //#define SimpleAssignment
 //#define option1
 #define option2
-#define BLOCKSIZE 40
+#define BLOCKSIZE 10
 #define THRESHOLD 7
 #define LABEL_ARRAYSIZE 150 //typically depends on how many labels to be stored (depends on the scanning window size)
 using namespace cv;
@@ -800,6 +800,8 @@ public:
 		std::cout << endl;
 
 		return DrawResultGrid;
+
+#endif
 	}//end segmenting()
 
 	void update_image(Mat DrawResultHere, Mat DrawResultGrid) {
@@ -815,5 +817,273 @@ public:
 		imwrite("Step3_boxes.png", DrawResultGrid);
 	}
 
-#endif
+	Mat Basic_Segment(Mat LoadedImage){
+		
+		CausalMeanArray[0] = 0;
+
+		Mat DrawResultGrid = LoadedImage.clone();
+
+		block_matrix.setup_matrix(640, 480, BLOCKSIZE, BLOCKSIZE);
+		
+		for (int row = 0; row <= LoadedImage.rows - windows_n_rows; row += StepSlide)
+		{
+			for (int col = 0; col <= LoadedImage.cols - windows_n_cols; col += StepSlide)
+			{
+						Rect windows(col, row, windows_n_rows, windows_n_cols);
+
+						// Draw grid
+						rectangle(DrawResultGrid, windows, Scalar(255), 1, 8, 0);
+
+						// Select windows roi
+						Mat Roi = LoadedImage(windows);
+
+						//Here calculate average of each Roi 
+						cv::Scalar tempVal = mean(Roi);
+						CausalMeanArray[1] = (unsigned short)tempVal.val[0];
+
+						//----- here using header to fill the matrix and blocks --------------	
+						Scalar block_avg = tempVal;
+						
+						int blockrow = (row / BLOCKSIZE);
+						int blockcol = (col / BLOCKSIZE);
+						
+						block_matrix.set_average_distance_block_row_cols(blockrow, blockcol, block_avg);
+
+						for (int i = row+1; i<=row+StepSlide-1; i++) {
+							for (int j = col + 1; j <= col + StepSlide - 1; j++) {
+								DrawResultGrid.at<uchar>(i, j) = tempVal[0];
+							}
+						}
+
+			}
+		}
+		// Save the result from LoadedImage to file
+		imwrite("processed_image.png", DrawResultGrid);
+
+		return DrawResultGrid;
+	}
+
+	Mat Grouping(Mat LoadedImage) {
+		
+		CausalMeanArray[0] = 0;
+
+		Mat DrawResultGrid = LoadedImage.clone();
+
+		//st first block label as zero
+		block_matrix.set_label_block_row_cols(0, 0, objcounter);
+
+		//set labels for all blocks in first row
+		for (int col = 1; col < LoadedImage.cols - windows_n_cols; col += StepSlide) {
+			
+			Scalar curr_block_dist = block_matrix.get_average_distance_block_row_cols(0, col);
+			Scalar prev_block_dist = block_matrix.get_average_distance_block_row_cols(0, col - 1);
+
+			if (abs(curr_block_dist[0] - prev_block_dist[0]) <= THRESHOLD || abs(curr_block_dist[0] - prev_block_dist[0]) >= THRESHOLD) {
+				block_matrix.set_label_block_row_cols(0, col, block_matrix.get_label_block_row_cols(0, col - 1));
+			}
+			else {
+				block_matrix.set_label_block_row_cols(0, col, ++objcounter);
+			}
+		}
+
+		//set labels for all blocks in first column
+		for (int row = 1; row < LoadedImage.rows - windows_n_rows; row += StepSlide) {
+
+			Scalar curr_block_dist = block_matrix.get_average_distance_block_row_cols(row, 0);
+			Scalar prev_block_dist = block_matrix.get_average_distance_block_row_cols(row, 0);
+
+			if (abs(curr_block_dist[0] - prev_block_dist[0]) <= THRESHOLD || abs(curr_block_dist[0] - prev_block_dist[0]) >= THRESHOLD) {
+				block_matrix.set_label_block_row_cols(row, 0, block_matrix.get_label_block_row_cols(row-1, 0));
+			}
+			else {
+				block_matrix.set_label_block_row_cols(row, 0, ++objcounter);
+			}
+		}
+
+		//set labels for rest of the blocks
+		for (int row = 1; row <= LoadedImage.rows - windows_n_rows; row += StepSlide)
+		{
+			for (int col = 1; col <= LoadedImage.cols - windows_n_cols; col += StepSlide)
+			{
+				//get average distance values
+				Scalar curr_block_dist = block_matrix.get_average_distance_block_row_cols(row, col);
+				Scalar left_block_dist = block_matrix.get_average_distance_block_row_cols(row, col-1);
+				Scalar uppr_block_dist = block_matrix.get_average_distance_block_row_cols(row-1, col);
+				Scalar diag_block_dist = block_matrix.get_average_distance_block_row_cols(row-1, col-1);
+
+				bool thresh_left = (curr_block_dist[0] - left_block_dist[0] <= THRESHOLD ? true : false);
+				bool thresh_uppr = (curr_block_dist[0] - uppr_block_dist[0] <= THRESHOLD ? true : false);
+				bool thresh_diag = (curr_block_dist[0] - diag_block_dist[0] <= THRESHOLD ? true : false);
+
+				switch (logic_process(thresh_left,thresh_uppr,thresh_diag))
+				{
+				case 0:
+				{
+					block_matrix.set_label_block_row_cols(row, col, ++objcounter);
+					break;
+				}
+				case 1:
+				{
+					block_matrix.set_label_block_row_cols(row, col, block_matrix.get_label_block_row_cols(row - 1, col - 1));
+					break;
+				}
+				case 2:
+				{
+					block_matrix.set_label_block_row_cols(row, col, block_matrix.get_label_block_row_cols(row - 1, col));
+					break;
+				}
+				case 3:
+				{
+					if (abs(curr_block_dist[0]-uppr_block_dist[0])<=abs(curr_block_dist[0]-diag_block_dist[0]))
+					{
+						block_matrix.set_label_block_row_cols(row, col, block_matrix.get_label_block_row_cols(row - 1, col));
+					}
+					else
+					{
+						block_matrix.set_label_block_row_cols(row, col, block_matrix.get_label_block_row_cols(row - 1, col-1));
+					}
+					break;
+				}
+				case 4:
+				{
+					block_matrix.set_label_block_row_cols(row, col, block_matrix.get_label_block_row_cols(row, col - 1));
+					break;
+				}
+				case 5:
+				{
+					if (abs(curr_block_dist[0] - left_block_dist[0]) <= abs(curr_block_dist[0] - diag_block_dist[0]))
+					{
+						block_matrix.set_label_block_row_cols(row, col, block_matrix.get_label_block_row_cols(row, col - 1));
+					}
+					else
+					{
+						block_matrix.set_label_block_row_cols(row, col, block_matrix.get_label_block_row_cols(row - 1, col - 1));
+					}
+					break;
+				}
+				case 6:
+				{
+					if (abs(curr_block_dist[0] - uppr_block_dist[0]) <= abs(curr_block_dist[0] - left_block_dist[0]))
+					{
+						block_matrix.set_label_block_row_cols(row, col, block_matrix.get_label_block_row_cols(row - 1, col));
+					}
+					else
+					{
+						block_matrix.set_label_block_row_cols(row, col, block_matrix.get_label_block_row_cols(row, col - 1));
+					}
+					break;
+				}
+				case 7:
+				{
+
+					if ((abs(curr_block_dist[0] - uppr_block_dist[0]) <= abs(curr_block_dist[0] - left_block_dist[0])) && (abs(curr_block_dist[0] - uppr_block_dist[0]) <= abs(curr_block_dist[0] - diag_block_dist[0])))
+					{
+						block_matrix.set_label_block_row_cols(row, col, block_matrix.get_label_block_row_cols(row - 1, col));
+					}
+					else if ((abs(curr_block_dist[0] - diag_block_dist[0]) <= abs(curr_block_dist[0] - left_block_dist[0])))
+					{
+						block_matrix.set_label_block_row_cols(row, col, block_matrix.get_label_block_row_cols(row - 1, col - 1));
+					}
+					else
+					{
+						block_matrix.set_label_block_row_cols(row, col, block_matrix.get_label_block_row_cols(row, col - 1));
+					}
+					break;
+				}
+				default:
+					break;
+				}
+			}
+		}	
+	}
+
+	int logic_process(bool left, bool uppr, bool diag) 
+	{
+		switch (left)
+		{
+		case true:
+		{
+			switch (uppr)
+			{
+				case true:
+				{
+					switch (diag)
+					{
+						case true:
+						{
+							return 7;
+							break;
+						}
+						case false:
+						{
+							return 6;
+							break;
+						}
+					}
+					break;
+				}
+				case false:
+				{
+					switch (diag)
+					{
+						case true:
+						{
+							return 5;
+							break;
+						}
+						case false:
+						{
+							return 4;
+							break;
+						}
+					}
+					break;
+				}
+			}
+			break;
+		}
+		case false:
+		{
+			switch (uppr)
+			{
+				case true:
+				{
+					switch (diag)
+					{
+					case true:
+					{
+						return 3;
+						break;
+					}
+					case false:
+					{
+						return 2;
+						break;
+					}
+					}
+					break;
+				}
+				case false:
+				{
+					switch (diag)
+					{
+						case true:
+						{
+							return 1;
+							break;
+						}
+						case false:
+						{
+							return 0;
+							break;
+						}
+					}
+					break;
+				}
+			}
+			break;
+		}
+		}
+	}
+
 	};
