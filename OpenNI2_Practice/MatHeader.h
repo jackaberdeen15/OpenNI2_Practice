@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 
 #include "opencv2\highgui.hpp"
 #include "opencv2\imgproc.hpp"
@@ -91,8 +92,8 @@ protected:
 	// block size
 	int block_width, block_height;
 	//default those that I originally created 
-	static const int default_block_width = 80;
-	static const int default_block_height = 80;
+	static const int default_block_width = 10;
+	static const int default_block_height = 10;
 
 	//matrix - pointer of pointers (big box with another box inside with things in it) -o
 	distance_block** matrix;
@@ -446,6 +447,7 @@ public:
 				for (int j = 0; j<block_cols; j++)
 				{
 					// get block coordinates
+					/*
 					int x0 = matrix[i][j].get_coordinate_x0();
 					int y0 = matrix[i][j].get_coordinate_y0();
 					int blkwidth = matrix[i][j].get_width();
@@ -454,8 +456,11 @@ public:
 					cout << " width=" << blkwidth << " ; height=" << blkheight << " .";
 					cout << " Distance=" << matrix[i][j].get_average_distance() << " ; label=" << matrix[i][j].get_label() << " ;";
 					cout << endl;
+					*/
+					cout << left;
+					cout <<setw(2)<< matrix[i][j].get_label() << "";
 				}
-				cout << endl << endl;
+				cout << endl;
 			}
 		}
 		else

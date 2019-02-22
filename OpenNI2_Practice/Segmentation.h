@@ -20,7 +20,7 @@
 //#define option1
 #define option2
 #define BLOCKSIZE 10
-#define THRESHOLD 7
+#define THRESHOLD 15
 #define LABEL_ARRAYSIZE 150 //typically depends on how many labels to be stored (depends on the scanning window size)
 using namespace cv;
 using namespace std;
@@ -817,13 +817,22 @@ public:
 		imwrite("Step3_boxes.png", DrawResultGrid);
 	}
 
+	void setup_block_matrix(int width = 640, int height = 480, int blockwidth = BLOCKSIZE, int blockheight = BLOCKSIZE)
+	{
+		printf("Setting up block matrix...\r\n");
+		block_matrix.setup_matrix(width, height, blockwidth, blockheight);
+		printf("Done.\r\n");
+
+		printf("Block No. rows = %d, No. cols = %d.\r\n", block_matrix.get_block_rows() , block_matrix.get_block_cols());
+	}
+
 	Mat Basic_Segment(Mat LoadedImage){
 		
 		CausalMeanArray[0] = 0;
 
 		Mat DrawResultGrid = LoadedImage.clone();
 
-		block_matrix.setup_matrix(640, 480, BLOCKSIZE, BLOCKSIZE);
+		
 		
 		for (int row = 0; row <= LoadedImage.rows - windows_n_rows; row += StepSlide)
 		{
@@ -863,47 +872,52 @@ public:
 		return DrawResultGrid;
 	}
 
-	Mat Grouping(Mat LoadedImage) {
+	void Grouping(Mat LoadedImage) {
 		
 		CausalMeanArray[0] = 0;
 
 		Mat DrawResultGrid = LoadedImage.clone();
 
+		printf("Labeling first block...\r\n");
 		//st first block label as zero
 		block_matrix.set_label_block_row_cols(0, 0, objcounter);
 
+		printf("Labelling row column..\r\n");
 		//set labels for all blocks in first row
-		for (int col = 1; col < LoadedImage.cols - windows_n_cols; col += StepSlide) {
+		for (int col = 1; col < LoadedImage.cols/BLOCKSIZE; col++) {
 			
 			Scalar curr_block_dist = block_matrix.get_average_distance_block_row_cols(0, col);
 			Scalar prev_block_dist = block_matrix.get_average_distance_block_row_cols(0, col - 1);
 
-			if (abs(curr_block_dist[0] - prev_block_dist[0]) <= THRESHOLD || abs(curr_block_dist[0] - prev_block_dist[0]) >= THRESHOLD) {
+			if (abs(curr_block_dist[0] - prev_block_dist[0]) <= THRESHOLD) {
 				block_matrix.set_label_block_row_cols(0, col, block_matrix.get_label_block_row_cols(0, col - 1));
 			}
 			else {
 				block_matrix.set_label_block_row_cols(0, col, ++objcounter);
 			}
 		}
+		printf("Done.\r\n");
+		printf("Labelling first column...\r\n");
 
 		//set labels for all blocks in first column
-		for (int row = 1; row < LoadedImage.rows - windows_n_rows; row += StepSlide) {
+		for (int row = 1; row < LoadedImage.rows/BLOCKSIZE; row++) {
 
 			Scalar curr_block_dist = block_matrix.get_average_distance_block_row_cols(row, 0);
 			Scalar prev_block_dist = block_matrix.get_average_distance_block_row_cols(row, 0);
 
-			if (abs(curr_block_dist[0] - prev_block_dist[0]) <= THRESHOLD || abs(curr_block_dist[0] - prev_block_dist[0]) >= THRESHOLD) {
+			if (abs(curr_block_dist[0] - prev_block_dist[0]) <= THRESHOLD) {
 				block_matrix.set_label_block_row_cols(row, 0, block_matrix.get_label_block_row_cols(row-1, 0));
 			}
 			else {
 				block_matrix.set_label_block_row_cols(row, 0, ++objcounter);
 			}
 		}
-
+		printf("Done.\r\n");
+		printf("Labelling rest of matrix...\r\n");
 		//set labels for rest of the blocks
-		for (int row = 1; row <= LoadedImage.rows - windows_n_rows; row += StepSlide)
+		for (int row = 1; row < LoadedImage.rows/BLOCKSIZE; row++)
 		{
-			for (int col = 1; col <= LoadedImage.cols - windows_n_cols; col += StepSlide)
+			for (int col = 1; col < LoadedImage.cols/BLOCKSIZE; col++)
 			{
 				//get average distance values
 				Scalar curr_block_dist = block_matrix.get_average_distance_block_row_cols(row, col);
@@ -911,9 +925,9 @@ public:
 				Scalar uppr_block_dist = block_matrix.get_average_distance_block_row_cols(row-1, col);
 				Scalar diag_block_dist = block_matrix.get_average_distance_block_row_cols(row-1, col-1);
 
-				bool thresh_left = (curr_block_dist[0] - left_block_dist[0] <= THRESHOLD ? true : false);
-				bool thresh_uppr = (curr_block_dist[0] - uppr_block_dist[0] <= THRESHOLD ? true : false);
-				bool thresh_diag = (curr_block_dist[0] - diag_block_dist[0] <= THRESHOLD ? true : false);
+				bool thresh_left = (abs(curr_block_dist[0] - left_block_dist[0]) <= THRESHOLD ? true : false);
+				bool thresh_uppr = (abs(curr_block_dist[0] - uppr_block_dist[0]) <= THRESHOLD ? true : false);
+				bool thresh_diag = (abs(curr_block_dist[0] - diag_block_dist[0]) <= THRESHOLD ? true : false);
 
 				switch (logic_process(thresh_left,thresh_uppr,thresh_diag))
 				{
@@ -995,6 +1009,10 @@ public:
 				}
 			}
 		}	
+		printf("Done.\r\n");
+		printf("Displaying matrix to check filled...\r\n");
+		block_matrix.printToScreen();
+		printf("Done.\r\n");
 	}
 
 	int logic_process(bool left, bool uppr, bool diag) 
