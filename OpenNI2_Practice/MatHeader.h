@@ -410,8 +410,8 @@ public:
 	short get_label_block_coordinates(int inp_x, int inp_y)
 	{
 		if ((matrixm_allocated) && (linear_array_allocated))
-			if (inp_x >= 0 && inp_x<image_height)
-				if (inp_y >= 0 && inp_x<image_width)
+			if (inp_x >= 0 && inp_x < image_height)
+				if (inp_y >= 0 && inp_x < image_width)
 				{
 					int inp_block_row = image_height / block_height;
 					int inp_block_col = image_width / block_width;
@@ -427,12 +427,7 @@ public:
 		return result2;
 	}
 
-
-
 	//--------------------------------------------------------------------------------------------------------------------------
-
-
-
 
 	// use during debug to check the matrix has been filled correctly
 	void printToScreen()
