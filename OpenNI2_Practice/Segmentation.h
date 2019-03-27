@@ -33,7 +33,8 @@ protected:
 	Mat LoadedImage;
 	//LoadedImage = imread("GRABBED.png", IMREAD_COLOR);
 	short objcounter = 0; //by default 1 object (there will always be something)
-	Point obj_coords_max[250], obj_coords_min[250]; //array to store the coordinates of min and max xy of a label;
+	Point obj_coords_max[250];
+	Point obj_coords_min[250]; //array to store the coordinates of min and max xy of a label;
 	double depthwidthscale[256] = { 0 }; //Stores the values of the width of a block at a certain depth
 	double depthheightscale[256] = { 0 }; //Stores the values of the height of a block at a certain depth
 	short obj_block_count[300] = { 0 };
@@ -947,11 +948,6 @@ public:
 		printf("Labeling first block...\r\n");
 		//st first block label as zero
 		block_matrix.set_label_block_row_cols(0, 0, objcounter);
-		obj_coords_min[objcounter].x = 0;
-		obj_coords_min[objcounter].y = 0;
-		obj_coords_max[objcounter].x = 0;
-		obj_coords_max[objcounter].y = 0;
-
 
 		printf("Labelling first row..\r\n");
 		//set labels for all blocks in first row
@@ -962,19 +958,9 @@ public:
 
 			if (abs(curr_block_dist[0] - prev_block_dist[0]) <= THRESHOLD) {
 				block_matrix.set_label_block_row_cols(0, col, block_matrix.get_label_block_row_cols(0, col - 1));
-
-				//set min/max coordinates of object 
-				if (col < obj_coords_min[objcounter].x) { obj_coords_min[objcounter].x = col; }
-				if (col > obj_coords_max[objcounter].x) { obj_coords_max[objcounter].x = col; }
 			}
 			else {
 				block_matrix.set_label_block_row_cols(0, col, ++objcounter);
-
-				//set min/max coordinates of object
-				obj_coords_min[objcounter].x = col;
-				obj_coords_min[objcounter].y = 0;
-				obj_coords_max[objcounter].x = col;
-				obj_coords_max[objcounter].y = 0;
 			}
 		}
 		printf("Done.\r\n");
@@ -995,12 +981,6 @@ public:
 			}
 			else {
 				block_matrix.set_label_block_row_cols(row, 0, ++objcounter);
-
-				//set min/max coordinates of object
-				obj_coords_min[objcounter].x = 0;
-				obj_coords_min[objcounter].y = row;
-				obj_coords_max[objcounter].x = 0;
-				obj_coords_max[objcounter].y = row;
 			}
 		}
 		printf("Done.\r\n");
@@ -1025,13 +1005,6 @@ public:
 				case 0://none within thresh
 				{
 					block_matrix.set_label_block_row_cols(row, col, ++objcounter);
-
-					//set min/max coordinates of object
-					obj_coords_min[objcounter].x = col;
-					obj_coords_min[objcounter].y = row;
-					obj_coords_max[objcounter].x = col;
-					obj_coords_max[objcounter].y = row;
-
 					break;
 				}
 				case 1://Diag within thresh
@@ -1039,13 +1012,6 @@ public:
 					int trg_obj = block_matrix.get_label_block_row_cols(row - 1, col - 1);
 
 					block_matrix.set_label_block_row_cols(row, col, trg_obj);
-
-					//set min/max coordinates of object
-					if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-					if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
-					if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-					if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
-
 					break;
 				}
 				case 2://uppr within thresh
@@ -1053,13 +1019,6 @@ public:
 					int trg_obj = block_matrix.get_label_block_row_cols(row - 1, col);
 
 					block_matrix.set_label_block_row_cols(row, col, trg_obj);
-
-					//set min/max coordinates of object
-					if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-					if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
-					if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-					if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
-
 					break;
 				}
 				case 3://uppr and diag within thresh
@@ -1071,13 +1030,6 @@ public:
 
 						block_matrix.set_label_block_row_cols(row, col, trg_obj);
 						block_matrix.set_label_block_row_cols(row - 1, col - 1, trg_obj);
-
-						//set min/max coordinates of object
-						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
-						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
-
 					}
 					//diag closer to current
 					else
@@ -1086,13 +1038,6 @@ public:
 
 						block_matrix.set_label_block_row_cols(row, col, trg_obj);
 						block_matrix.set_label_block_row_cols(row - 1, col, trg_obj);
-
-						//set min/max coordinates of object
-						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
-						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
-
 					}
 					break;
 				}
@@ -1101,13 +1046,6 @@ public:
 					int trg_obj = block_matrix.get_label_block_row_cols(row, col - 1);
 
 					block_matrix.set_label_block_row_cols(row, col, trg_obj);
-
-					//set min/max coordinates of object
-					if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-					if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
-					if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-					if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
-
 					break;
 				}
 				case 5://left and diag within thresh
@@ -1119,13 +1057,6 @@ public:
 
 						block_matrix.set_label_block_row_cols(row, col, trg_obj);
 						block_matrix.set_label_block_row_cols(row - 1, col - 1, trg_obj);
-
-						//set min/max coordinates of object
-						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
-						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
-
 					}
 					//diag closer to current
 					else
@@ -1134,13 +1065,6 @@ public:
 
 						block_matrix.set_label_block_row_cols(row, col, trg_obj);
 						block_matrix.set_label_block_row_cols(row, col - 1, trg_obj);
-
-						//set min/max coordinates of object
-						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
-						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
-
 					}
 					break;
 				}
@@ -1153,13 +1077,6 @@ public:
 
 						block_matrix.set_label_block_row_cols(row, col, trg_obj);
 						block_matrix.set_label_block_row_cols(row, col - 1, trg_obj);
-
-						//set min/max coordinates of object
-						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
-						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
-
 					}
 					//left closer to current
 					else
@@ -1168,13 +1085,6 @@ public:
 
 						block_matrix.set_label_block_row_cols(row, col, trg_obj);
 						block_matrix.set_label_block_row_cols(row - 1, col, trg_obj);
-
-						//set min/max coordinates of object
-						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
-						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
-
 					}
 					break;
 				}
@@ -1188,13 +1098,6 @@ public:
 						block_matrix.set_label_block_row_cols(row, col, trg_obj);
 						block_matrix.set_label_block_row_cols(row - 1, col - 1, trg_obj);
 						block_matrix.set_label_block_row_cols(row, col - 1, trg_obj);
-
-						//set min/max coordinates of object
-						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
-						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
-
 					}
 					//diag closer to current
 					else if ((abs(curr_block_dist[0] - diag_block_dist[0]) < abs(curr_block_dist[0] - left_block_dist[0])))
@@ -1204,13 +1107,6 @@ public:
 						block_matrix.set_label_block_row_cols(row, col, trg_obj);
 						block_matrix.set_label_block_row_cols(row - 1, col, trg_obj);
 						block_matrix.set_label_block_row_cols(row, col - 1, trg_obj);
-
-						//set min/max coordinates of object
-						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
-						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
-
 					}
 					//left closer to curr
 					else
@@ -1220,13 +1116,6 @@ public:
 						block_matrix.set_label_block_row_cols(row, col, trg_obj);
 						block_matrix.set_label_block_row_cols(row - 1, col - 1, trg_obj);
 						block_matrix.set_label_block_row_cols(row - 1, col, trg_obj);
-
-						//set min/max coordinates of object
-						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
-						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
-
 					}
 					break;
 				}
@@ -1459,9 +1348,25 @@ public:
 		}
 	}
 
-	void recheck_coords()
+	void set_approx_obj_coords()
 	{
+		for (short i = 0; i < 250; i++)
+		{
+			obj_coords_min[i].x = 1000;
+			obj_coords_min[i].y = 1000;
 
+		}
+		for (short row = 0; row < 480 / BLOCKSIZE; row++)
+		{
+			for (short col = 0; col < 640 / BLOCKSIZE; col++)
+			{
+				short curr_obj = block_matrix.get_label_block_row_cols(row, col);
+				if (col < obj_coords_min[curr_obj].x) { obj_coords_min[curr_obj].x = col; }
+				if (row < obj_coords_min[curr_obj].y) { obj_coords_min[curr_obj].y = row; }
+				if (col > obj_coords_max[curr_obj].x) { obj_coords_max[curr_obj].x = col; }
+				if (row > obj_coords_max[curr_obj].y) { obj_coords_max[curr_obj].y = row; }
+			}
+		}
 	}
 
 	//Functions for determining size of blocks at certain depths
