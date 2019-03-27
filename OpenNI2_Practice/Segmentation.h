@@ -38,6 +38,7 @@ protected:
 	double depthwidthscale[256] = { 0 }; //Stores the values of the width of a block at a certain depth
 	double depthheightscale[256] = { 0 }; //Stores the values of the height of a block at a certain depth
 	short obj_block_count[300] = { 0 };
+	double obj_area[250] = { 0.0 }; //Stores the approximate area of an object
 
 	distance_block block; //each block (window) that has been scanned; label and coordinates/size is there
 	distance_matrix block_matrix; //matrix that contains scanned blocks with their label and other info
@@ -1350,7 +1351,7 @@ public:
 
 	void set_approx_obj_coords()
 	{
-		for (short i = 0; i < 250; i++)
+		for (short i = 0; i < 250; i++) //sets min to be high as default value of array is [0,0]
 		{
 			obj_coords_min[i].x = 1000;
 			obj_coords_min[i].y = 1000;
@@ -1369,22 +1370,52 @@ public:
 		}
 	}
 
+	void deter_obj_area()
+	{
+		for (short i = 0; i <= objcounter; i++)
+		{
+			if (obj_block_count[i] > 0)
+			{
+				for (short row = obj_coords_min[i].y; row <= obj_coords_max[i].y; row++)
+				{
+					for (short col = obj_coords_min[i].x; col <= obj_coords_max[i].x; col++)
+					{
+						if (block_matrix.get_label_block_row_cols(row, col) == i)
+						{
+							Scalar depth = block_matrix.get_average_distance_block_row_cols(row, col);
+							obj_area[i] += pow(second_order(depth[0]), 2);
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+	void print_obj_areas()
+	{
+		for (short i = 0; i <= objcounter; i++)
+		{
+			cout << "Object " << i << " approximate area is " << obj_area[i] << "." << endl;
+		}
+	}
+
 	//Functions for determining size of blocks at certain depths
-	float first_order(int depth)
+	double first_order(int depth)
 	{
-		float x = 0.5893*depth - 5.4701;
+		double x = 0.5893*depth - 5.4701;
 		return x;
 	}
 
-	float second_order(int depth)
+	double second_order(int depth)
 	{
-		float x = -0.0012*pow(depth,2) + 0.7347*depth - 9.4969;
+		double x = -0.0012*pow(depth,2) + 0.7347*depth - 9.4969;
 		return x;
 	}
 
-	float third_order(int depth)
+	double third_order(int depth)
 	{
-		float x = -0.0001*pow(depth, 3) + 0.0194*pow(depth, 2) - 0.4638*depth + 11.9323;
+		double x = -0.0001*pow(depth, 3) + 0.0194*pow(depth, 2) - 0.4638*depth + 11.9323;
 		return x;
 	}
 
