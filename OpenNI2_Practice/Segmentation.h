@@ -1396,7 +1396,7 @@ public:
 	{
 		for (short i = 0; i <= objcounter; i++)
 		{
-			cout << "Object " << i << " approximate area is " << obj_area[i] << "." << endl;
+			cout << "Object " << i << " approximate area is " << obj_area[i] << "mm^2." << endl;
 		}
 	}
 
