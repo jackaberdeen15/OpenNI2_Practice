@@ -20,7 +20,7 @@
 //#define option1
 #define option2
 #define BLOCKSIZE 10
-#define THRESHOLD 7
+#define THRESHOLD 15
 #define LABEL_ARRAYSIZE 150 //typically depends on how many labels to be stored (depends on the scanning window size)
 using namespace cv;
 using namespace std;
@@ -36,6 +36,7 @@ protected:
 	Point obj_coords_max[250], obj_coords_min[250]; //array to store the coordinates of min and max xy of a label;
 	double depthwidthscale[256] = { 0 }; //Stores the values of the width of a block at a certain depth
 	double depthheightscale[256] = { 0 }; //Stores the values of the height of a block at a certain depth
+	short obj_block_count[300] = { 0 };
 
 	distance_block block; //each block (window) that has been scanned; label and coordinates/size is there
 	distance_matrix block_matrix; //matrix that contains scanned blocks with their label and other info
@@ -1337,8 +1338,11 @@ public:
 	{
 		for (int i=0; i <= objcounter; i++) 
 		{
-			cout << "Min coordinates of object " << i << " is " << obj_coords_min[i] << "." << endl;
-			cout << "Max coordinates of object " << i << " is " << obj_coords_max[i] << "." << endl;
+			if (obj_block_count[i] != 0) {
+				cout << "Size of object " << i << " is " << obj_block_count[i] << "." << endl;
+				cout << "Min coordinates of object " << i << " is " << obj_coords_min[i] << "." << endl;
+				cout << "Max coordinates of object " << i << " is " << obj_coords_max[i] << ".\n" << endl;
+			}
 		}
 	}
 
@@ -1443,6 +1447,40 @@ public:
 												//by default all zeros
 	}
 
+	void get_object_size()
+	{
+		for (short row = 0; row < 480 / BLOCKSIZE; row++)
+		{
+			for (short col = 0; col < 640 / BLOCKSIZE; col++)
+			{
+				short labelnum = block_matrix.get_label_block_row_cols(row, col);
+				obj_block_count[labelnum] += 1;
+			}
+		}
+	}
 
+	void recheck_coords()
+	{
+
+	}
+
+	//Functions for determining size of blocks at certain depths
+	float first_order(int depth)
+	{
+		float x = 0.5893*depth - 5.4701;
+		return x;
+	}
+
+	float second_order(int depth)
+	{
+		float x = -0.0012*pow(depth,2) + 0.7347*depth - 9.4969;
+		return x;
+	}
+
+	float third_order(int depth)
+	{
+		float x = -0.0001*pow(depth, 3) + 0.0194*pow(depth, 2) - 0.4638*depth + 11.9323;
+		return x;
+	}
 
 	};
