@@ -20,18 +20,22 @@
 //#define option1
 #define option2
 #define BLOCKSIZE 10
-#define THRESHOLD 15
+#define THRESHOLD 7
 #define LABEL_ARRAYSIZE 150 //typically depends on how many labels to be stored (depends on the scanning window size)
 using namespace cv;
 using namespace std;
+ofstream fout;
 
 class Image_Process {
 protected:
 	//  Load the image from file
+	bool setup = false;
 	Mat LoadedImage;
 	//LoadedImage = imread("GRABBED.png", IMREAD_COLOR);
 	short objcounter = 0; //by default 1 object (there will always be something)
 	Point obj_coords_max[250], obj_coords_min[250]; //array to store the coordinates of min and max xy of a label;
+	double depthwidthscale[256] = { 0 }; //Stores the values of the width of a block at a certain depth
+	double depthheightscale[256] = { 0 }; //Stores the values of the height of a block at a certain depth
 
 	distance_block block; //each block (window) that has been scanned; label and coordinates/size is there
 	distance_matrix block_matrix; //matrix that contains scanned blocks with their label and other info
@@ -49,6 +53,8 @@ protected:
 	unsigned short CausalMeanArray[5]; //grabs 5 values simultaneously
 
 public:
+	//prev students code modified 
+	//OUTDATED
 	Mat Segmenting(Mat LoadedImage)
 	{
 		namedWindow("1. Loaded img", WINDOW_AUTOSIZE);
@@ -804,7 +810,7 @@ public:
 
 #endif
 	}//end segmenting()
-
+	//OUTDATEd
 	void update_image(Mat DrawResultHere, Mat DrawResultGrid) {
 		namedWindow("2. Draw Rectangle", WINDOW_AUTOSIZE);
 		imshow("2. Draw Rectangle", DrawResultHere);
@@ -820,11 +826,15 @@ public:
 
 	void setup_block_matrix(int width = 640, int height = 480, int blockwidth = BLOCKSIZE, int blockheight = BLOCKSIZE)
 	{
-		printf("Setting up block matrix...\r\n");
-		block_matrix.setup_matrix(width, height, blockwidth, blockheight);
-		printf("Done.\r\n");
+		if (!setup) {
+			printf("Setting up block matrix...\r\n");
+			block_matrix.setup_matrix(width, height, blockwidth, blockheight);
+			printf("Done.\r\n");
 
-		printf("Block No. rows = %d, No. cols = %d.\r\n", block_matrix.get_block_rows() , block_matrix.get_block_cols());
+			printf("Block No. rows = %d, No. cols = %d.\r\n", block_matrix.get_block_rows(), block_matrix.get_block_cols());
+			setup = true;
+		}
+		
 	}
 
 	Mat Basic_Segment(Mat LoadedImage){
@@ -868,7 +878,11 @@ public:
 			}
 		}
 		// Save the result from LoadedImage to file
-		imwrite("processed_image.png", DrawResultGrid);
+		imwrite("processed_depth_image.png", DrawResultGrid);
+
+			
+		
+		
 
 		return DrawResultGrid;
 	}
@@ -918,7 +932,7 @@ public:
 			}
 		}
 		// Save the result from LoadedImage to file
-		imwrite("processed_image.png", DrawResultGrid);
+		imwrite("processed_colour_image.png", DrawResultGrid);
 
 		return DrawResultGrid;
 	}
@@ -950,7 +964,7 @@ public:
 
 				//set min/max coordinates of object 
 				if (col < obj_coords_min[objcounter].x) { obj_coords_min[objcounter].x = col; }
-				if (col > obj_coords_max[objcounter].x) { obj_coords_min[objcounter].x = col; }
+				if (col > obj_coords_max[objcounter].x) { obj_coords_max[objcounter].x = col; }
 			}
 			else {
 				block_matrix.set_label_block_row_cols(0, col, ++objcounter);
@@ -976,7 +990,7 @@ public:
 
 				//set min/max coordinates of object
 				if (row < obj_coords_min[objcounter].y) { obj_coords_min[objcounter].y = row; }
-				if (row > obj_coords_max[objcounter].y) { obj_coords_min[objcounter].y = row; }
+				if (row > obj_coords_max[objcounter].y) { obj_coords_max[objcounter].y = row; }
 			}
 			else {
 				block_matrix.set_label_block_row_cols(row, 0, ++objcounter);
@@ -1027,9 +1041,9 @@ public:
 
 					//set min/max coordinates of object
 					if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-					if (row > obj_coords_max[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
+					if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
 					if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-					if (col > obj_coords_max[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
+					if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
 
 					break;
 				}
@@ -1041,9 +1055,9 @@ public:
 
 					//set min/max coordinates of object
 					if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-					if (row > obj_coords_max[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
+					if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
 					if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-					if (col > obj_coords_max[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
+					if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
 
 					break;
 				}
@@ -1059,9 +1073,9 @@ public:
 
 						//set min/max coordinates of object
 						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
+						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
 						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
+						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
 
 					}
 					//diag closer to current
@@ -1074,9 +1088,9 @@ public:
 
 						//set min/max coordinates of object
 						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
+						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
 						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
+						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
 
 					}
 					break;
@@ -1089,9 +1103,9 @@ public:
 
 					//set min/max coordinates of object
 					if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-					if (row > obj_coords_max[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
+					if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
 					if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-					if (col > obj_coords_max[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
+					if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
 
 					break;
 				}
@@ -1107,9 +1121,9 @@ public:
 
 						//set min/max coordinates of object
 						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
+						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
 						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
+						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
 
 					}
 					//diag closer to current
@@ -1122,9 +1136,9 @@ public:
 
 						//set min/max coordinates of object
 						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
+						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
 						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
+						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
 
 					}
 					break;
@@ -1141,9 +1155,9 @@ public:
 
 						//set min/max coordinates of object
 						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
+						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
 						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
+						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
 
 					}
 					//left closer to current
@@ -1156,9 +1170,9 @@ public:
 
 						//set min/max coordinates of object
 						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
+						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
 						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
+						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
 
 					}
 					break;
@@ -1166,7 +1180,7 @@ public:
 				case 7://all within thresh
 				{
 					//uppr closer to current
-					if ((abs(curr_block_dist[0] - uppr_block_dist[0]) <= abs(curr_block_dist[0] - left_block_dist[0])) && (abs(curr_block_dist[0] - uppr_block_dist[0]) <= abs(curr_block_dist[0] - diag_block_dist[0])))
+					if ((abs(curr_block_dist[0] - uppr_block_dist[0]) < abs(curr_block_dist[0] - left_block_dist[0])) && (abs(curr_block_dist[0] - uppr_block_dist[0]) < abs(curr_block_dist[0] - diag_block_dist[0])))
 					{
 						int trg_obj = block_matrix.get_label_block_row_cols(row - 1, col);
 
@@ -1176,13 +1190,13 @@ public:
 
 						//set min/max coordinates of object
 						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
+						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
 						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
+						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
 
 					}
 					//diag closer to current
-					else if ((abs(curr_block_dist[0] - diag_block_dist[0]) <= abs(curr_block_dist[0] - left_block_dist[0])))
+					else if ((abs(curr_block_dist[0] - diag_block_dist[0]) < abs(curr_block_dist[0] - left_block_dist[0])))
 					{
 						int trg_obj = block_matrix.get_label_block_row_cols(row - 1, col - 1);
 
@@ -1192,9 +1206,9 @@ public:
 
 						//set min/max coordinates of object
 						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
+						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
 						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
+						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
 
 					}
 					//left closer to curr
@@ -1208,9 +1222,9 @@ public:
 
 						//set min/max coordinates of object
 						if (row < obj_coords_min[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
-						if (row > obj_coords_max[trg_obj].y) { obj_coords_min[trg_obj].y = row; }
+						if (row > obj_coords_max[trg_obj].y) { obj_coords_max[trg_obj].y = row; }
 						if (col < obj_coords_min[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
-						if (col > obj_coords_max[trg_obj].x) { obj_coords_min[trg_obj].x = col; }
+						if (col > obj_coords_max[trg_obj].x) { obj_coords_max[trg_obj].x = col; }
 
 					}
 					break;
@@ -1319,10 +1333,13 @@ public:
 		}
 	}
 
-	void show_min_max_coords(int object)
+	void show_min_max_coords()
 	{
-		cout << "Min coordinates of object " << object << " is (" << obj_coords_min[object].x << "," << obj_coords_min[object].y << ")." << endl;
-		cout << "Max coordinates of object " << object << " is (" << obj_coords_max[object].x << "," << obj_coords_max[object].y << ")." << endl;
+		for (int i=0; i <= objcounter; i++) 
+		{
+			cout << "Min coordinates of object " << i << " is " << obj_coords_min[i] << "." << endl;
+			cout << "Max coordinates of object " << i << " is " << obj_coords_max[i] << "." << endl;
+		}
 	}
 
 	Point* return_max_coords() { return obj_coords_max; }
@@ -1330,5 +1347,102 @@ public:
 	Point* return_min_coords() { return obj_coords_min; }
 
 	int return_obj_count() { return objcounter; }
+
+	void add_calib_points(Point* min_coords, Point* max_coords, short object)
+	{
+		
+
+		cout << "Current Object inside calib points is " << object << "." << endl;
+		cout << "Min Coords " << min_coords[object] << "." << endl;
+		cout << "Max Coords " << max_coords[object] << "." << endl;
+
+		for (int row = min_coords[object].y; row <= max_coords[object].y; row++)
+		{
+			for (int col = min_coords[object].x; col <= max_coords[object].x; col++)
+			{
+				//cout << "Curr Coords (" << col << "," << row << ")." << endl;
+				block_matrix.set_label_block_row_cols(row, col, 89+object);
+
+			}
+		}
+		obj_coords_max[89 + object] = max_coords[object];
+		obj_coords_min[89 + object] = min_coords[object];
+
+		cout << "Object_coords_max is now " << obj_coords_max[89 + object] << endl;
+		cout << "Object_coords_min is now " << obj_coords_min[89 + object] << endl;
+
+	}
+
+	void print_labels()
+	{
+		block_matrix.printToScreen();
+	}
+
+	void determine_scaling(short num_obj, float object_dimension = 145, bool print_scale = false)
+	{
+		
+		cout << "Determining Scaling" << endl;
+		int dif_dis_arr[2];
+		for (short i = 1; i <= num_obj; i++)
+		{
+			Point center_block;
+			center_block.x = (obj_coords_min[89 + i].x + (obj_coords_max[89 + i].x - obj_coords_min[89 + i].x) / 2);
+			center_block.y = (obj_coords_min[89 + i].y + (obj_coords_max[89 + i].y - obj_coords_min[89 + i].y) / 2);
+
+			Scalar center_depth_block = block_matrix.get_average_distance_block_row_cols(center_block.y, center_block.x);
+
+			cout << "Object " << i << " max coordinates are " << obj_coords_max[89 + i] << "." << endl;
+			cout << "Object " << i << " min coordinates are " << obj_coords_min[89 + i] << "." << endl;
+			cout << "Object dimension " << object_dimension << ", width difference " << obj_coords_max[89 + i].x - obj_coords_min[89 + i].x << endl;
+			cout << "Object dimension " << object_dimension << ", height difference " << obj_coords_max[89 + i].y - obj_coords_min[89 + i].y << endl;
+
+			float width = object_dimension / (obj_coords_max[89+i].x - obj_coords_min[89+i].x);
+			float height = object_dimension / (obj_coords_max[89+i].y - obj_coords_min[89+i].y);
+
+			dif_dis_arr[i - 1] = center_depth_block[0];
+			depthwidthscale[dif_dis_arr[i - 1]] = width;
+			depthheightscale[dif_dis_arr[i - 1]] = height;
+
+			cout << "Object " << i << ": Depth " << center_depth_block[0] << ", Block Height " << height << "mm, Block Width " << width << "mm." << endl;
+			
+			short check = 0;
+			cout << "Do you want to calibrate to file?: \r\n1 Yes\r\n2 No\r\n";
+			cin >> check;
+
+			if (check == 1)
+			{
+				cout << "Writing to scale_data.csv." << endl;
+				fout.open("scale_data.csv", ios::app);
+				fout << center_depth_block[0] << "," << height << "," << width << endl;
+				fout.close();
+			}
+			
+		}
+
+		if (print_scale)
+		{
+			for (int i = 0; i < 256; i++)
+			{
+				cout << "Scale for width at depth " << i << " is " << depthwidthscale[i] << endl;
+				cout << "Scale for height at depth " << i << " is " << depthheightscale[i] << endl;
+			}
+		}
+	}
+
+	void reset_matrix()
+	{
+		block_matrix.reset_blocks();
+		objcounter = 0; //by default 1 object (there will always be something)
+		obj_coords_max[250] = { 0,0 };
+		obj_coords_min[250] = { 0,0 }; //array to store the coordinates of min and max xy of a label;
+		depthwidthscale[256] = { 0 };	//Stores the values of the width of a block at a certain depth
+		depthheightscale[256] = { 0 };	//Stores the values of the height of a block at a certain depth
+
+		size_array[LABEL_ARRAYSIZE] = { 0 };	//array that will contain number of windows contained under each label;
+												//position in the array determines the label
+												//by default all zeros
+	}
+
+
 
 	};

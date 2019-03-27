@@ -362,7 +362,17 @@ public:
 
 	}
 
-
+	void reset_blocks()
+	{
+		for (int row = 0; row < block_rows; row++)
+		{
+			for (int col = 0; col < block_cols; col++)
+			{
+				matrix[row][col].set_average_distance(0);
+				matrix[row][col].set_label(0);
+			}
+		}
+	}
 
 	// same as above, starting with the coordinate of a point inside the block
 	void set_label_block_coordinates(int inp_x, int inp_y, short inp_label)
