@@ -19,9 +19,10 @@
 //#define SimpleAssignment
 //#define option1
 #define option2
-#define BLOCKSIZE 10
+#define BLOCKSIZE 5
 #define THRESHOLD 15
 #define LABEL_ARRAYSIZE 150 //typically depends on how many labels to be stored (depends on the scanning window size)
+#define EXP_OBJ_NUM 1000
 using namespace cv;
 using namespace std;
 ofstream fout;
@@ -33,12 +34,13 @@ protected:
 	Mat LoadedImage;
 	//LoadedImage = imread("GRABBED.png", IMREAD_COLOR);
 	short objcounter = 0; //by default 1 object (there will always be something)
-	Point obj_coords_max[250];
-	Point obj_coords_min[250]; //array to store the coordinates of min and max xy of a label;
+	Point obj_coords_max[EXP_OBJ_NUM];
+	Point obj_coords_min[EXP_OBJ_NUM]; //array to store the coordinates of min and max xy of a label;
 	double depthwidthscale[256] = { 0 }; //Stores the values of the width of a block at a certain depth
 	double depthheightscale[256] = { 0 }; //Stores the values of the height of a block at a certain depth
-	short obj_block_count[300] = { 0 };
-	double obj_area[250] = { 0.0 }; //Stores the approximate area of an object
+	short obj_block_count[EXP_OBJ_NUM] = { 0 };
+	double obj_area[EXP_OBJ_NUM] = { 0.0 }; //Stores the approximate area of an object
+	Scalar ave_block_depths[EXP_OBJ_NUM];
 
 	distance_block block; //each block (window) that has been scanned; label and coordinates/size is there
 	distance_matrix block_matrix; //matrix that contains scanned blocks with their label and other info
@@ -54,6 +56,182 @@ protected:
 	int StepSlide = BLOCKSIZE;
 
 	unsigned short CausalMeanArray[5]; //grabs 5 values simultaneously
+
+private:
+	//Function to remove all objects which have no blocks assigned to them
+	void remove_non_exi_obj()
+	{
+		for (short i = 0; i <= objcounter; i++)
+		{
+			if (obj_block_count[i] == 0)
+			{
+				cout << "Object " << i << " was removed." << endl;
+				for (short row = 0; row < 480 / BLOCKSIZE; row++)
+				{
+					for (short col = 0; col < 640 / BLOCKSIZE; col++)
+					{
+						short label = block_matrix.get_label_block_row_cols(row, col);
+						if (label > i)
+						{
+							block_matrix.set_label_block_row_cols(row, col, label - 1);
+						}
+					}
+				}
+				for (short j = 0; j < EXP_OBJ_NUM; j++)
+				{
+					short pos = i + j;
+					obj_block_count[pos] = obj_block_count[pos + 1];
+				}
+				--objcounter;
+			}
+		}
+	}
+
+	//function to decide the labelling in grouping
+	int logic_process(bool left, bool uppr, bool diag)
+	{
+		switch (left)
+		{
+		case true:
+		{
+			switch (uppr)
+			{
+			case true:
+			{
+				switch (diag)
+				{
+				case true: //all 3 within threshold
+				{
+					return 7;
+					break;
+				}
+				case false: //left and upper within threshold
+				{
+					return 6;
+					break;
+				}
+				}
+				break;
+			}
+			case false:
+			{
+				switch (diag)
+				{
+				case true://left and daig within threshold
+				{
+					return 5;
+					break;
+				}
+				case false: //only left within theshold
+				{
+					return 4;
+					break;
+				}
+				}
+				break;
+			}
+			}
+			break;
+		}
+		case false:
+		{
+			switch (uppr)
+			{
+			case true:
+			{
+				switch (diag)
+				{
+				case true://upper and diag within threshold
+				{
+					return 3;
+					break;
+				}
+				case false://only upper within threshold
+				{
+					return 2;
+					break;
+				}
+				}
+				break;
+			}
+			case false:
+			{
+				switch (diag)
+				{
+				case true://only diagonal within theshold
+				{
+					return 1;
+					break;
+				}
+				case false://none within threshold
+				{
+					return 0;
+					break;
+				}
+				}
+				break;
+			}
+			}
+			break;
+		}
+		}
+	}
+
+	void get_object_block_count()
+	{
+		for (short row = 0; row < 480 / BLOCKSIZE; row++)
+		{
+			for (short col = 0; col < 640 / BLOCKSIZE; col++)
+			{
+				short labelnum = block_matrix.get_label_block_row_cols(row, col);
+				obj_block_count[labelnum] += 1;
+			}
+		}
+	}
+
+	//Functions for determining size of blocks (10*10) at certain depths
+	double first_order_10(int depth)
+	{
+		if (depth == 0) { return 0.0; }
+		double x = 0.5893*depth - 5.4701;
+		return x;
+	}
+
+	double second_order_10(int depth)
+	{
+		if (depth == 0) { return 0.0; }
+		double x = -0.0012*pow(depth, 2) + 0.7347*depth - 9.4969;
+		return x;
+	}
+
+	double third_order_10(int depth)
+	{
+		if (depth == 0) { return 0.0; }
+		double x = -0.0001*pow(depth, 3) + 0.0194*pow(depth, 2) - 0.4638*depth + 11.9323;
+		return x;
+	}
+
+	//Functions for determining size of blocks (5*5) at certain depths
+	double first_order_5(int depth)
+	{
+		if (depth == 0) { return 0.0; }
+		double x = 0.2633*depth - 3.0499;
+		return x;
+	}
+
+	double second_order_5(int depth)
+	{
+		if (depth == 0) { return 0.0; }
+		double x = 0.0010*pow(depth, 2) + 0.1080*depth + 1.9215;
+		return x;
+	}
+
+	double third_order_5(int depth)
+	{
+		if (depth == 0) { return 0.0; }
+		double x = 0.0000*pow(depth, 3) - 0.0010*pow(depth, 2) + 0.2504*depth - 0.9892;
+		return x;
+	}
 
 public:
 	//prev students code modified 
@@ -855,13 +1033,13 @@ public:
 						Rect windows(col, row, windows_n_rows, windows_n_cols);
 
 						// Draw grid
-						rectangle(DrawResultGrid, windows, Scalar(255), 1, 8, 0);
+						//rectangle(DrawResultGrid, windows, Scalar(255), 1, 8, 0);
 
 						// Select windows roi
 						Mat Roi = LoadedImage(windows);
 
 						//Here calculate average of each Roi 
-						cv::Scalar tempVal = mean(Roi);
+						Scalar tempVal = mean(Roi);
 						CausalMeanArray[1] = (unsigned short)tempVal.val[0];
 
 						//----- here using header to fill the matrix and blocks --------------	
@@ -871,12 +1049,26 @@ public:
 						int blockcol = (col / BLOCKSIZE);
 						
 						block_matrix.set_average_distance_block_row_cols(blockrow, blockcol, block_avg);
+						short counter = 0;
+						int thresh = THRESHOLD / 2;
 
-						for (int i = row+1; i<=row+StepSlide-1; i++) {
+						//check homogeneity of the block
+						for (int i = row; i < row + StepSlide; i++) {
+							for (int j = col; j < col + StepSlide; j++) {
+								if (DrawResultGrid.at<uchar>(i, j) >= (block_avg[0] + thresh) || DrawResultGrid.at<uchar>(i, j) <= (block_avg[0] - thresh))
+								{
+									counter++;
+								}
+							}
+						}
+						if(counter>0){ block_matrix.set_block_homflag_row_cols(blockrow, blockcol, false); }
+
+						//Changes colour of all pixels to the average
+						/*for (int i = row+1; i<=row+StepSlide-1; i++) {
 							for (int j = col + 1; j <= col + StepSlide - 1; j++) {
 								DrawResultGrid.at<uchar>(i, j) = tempVal[0];
 							}
-						}
+						}*/
 
 			}
 		}
@@ -924,13 +1116,13 @@ public:
 				if (block_avg[0] >= 127) { block_matrix.set_average_distance_block_row_cols(blockrow, blockcol, { 255,255,255 }); }
 				else { block_matrix.set_average_distance_block_row_cols(blockrow, blockcol, {0, 0, 0}); }
 				
-
-				for (int i = row + 1; i <= row + StepSlide - 1; i++) {
+				//Changes colour to either pure white or black
+				/*for (int i = row + 1; i <= row + StepSlide - 1; i++) {
 					for (int j = col + 1; j <= col + StepSlide - 1; j++) {
 						if (block_avg[0] >= 127) { DrawResultGrid.at<uchar>(i, j) = 255; }
 						else{ DrawResultGrid.at<uchar>(i, j) = 0; }
 					}
-				}
+				}*/
 
 			}
 		}
@@ -1126,6 +1318,10 @@ public:
 			}
 		}	
 		printf("Done.\r\n");
+
+		get_object_block_count();
+		remove_non_exi_obj();
+
 		if (print)
 		{
 			printf("Displaying matrix to check filled...\r\n");
@@ -1133,95 +1329,6 @@ public:
 			printf("Done.\r\n");
 		}
 		
-	}
-
-	int logic_process(bool left, bool uppr, bool diag) 
-	{
-		switch (left)
-		{
-		case true:
-		{
-			switch (uppr)
-			{
-				case true:
-				{
-					switch (diag)
-					{
-						case true: //all 3 within threshold
-						{
-							return 7;
-							break;
-						}
-						case false: //left and upper within threshold
-						{
-							return 6;
-							break;
-						}
-					}
-					break;
-				}
-				case false:
-				{
-					switch (diag)
-					{
-						case true://left and daig within threshold
-						{
-							return 5; 
-							break;
-						}
-						case false: //only left within theshold
-						{
-							return 4;
-							break;
-						}
-					}
-					break;
-				}
-			}
-			break;
-		}
-		case false:
-		{
-			switch (uppr)
-			{
-				case true:
-				{
-					switch (diag)
-					{
-					case true://upper and diag within threshold
-					{
-						return 3;
-						break;
-					}
-					case false://only upper within threshold
-					{
-						return 2;
-						break;
-					}
-					}
-					break;
-				}
-				case false:
-				{
-					switch (diag)
-					{
-						case true://only diagonal within theshold
-						{
-							return 1;
-							break;
-						}
-						case false://none within threshold
-						{
-							return 0;
-							break;
-						}
-					}
-					break;
-				}
-			}
-			break;
-		}
-		}
 	}
 
 	void show_min_max_coords()
@@ -1277,41 +1384,39 @@ public:
 		
 		cout << "Determining Scaling" << endl;
 		int dif_dis_arr[2];
-		for (short i = 1; i <= num_obj; i++)
+		
+		Point center_block;
+		center_block.x = (obj_coords_min[89 + num_obj].x + (obj_coords_max[89 + num_obj].x - obj_coords_min[89 + num_obj].x) / 2);
+		center_block.y = (obj_coords_min[89 + num_obj].y + (obj_coords_max[89 + num_obj].y - obj_coords_min[89 + num_obj].y) / 2);
+
+		Scalar center_depth_block = block_matrix.get_average_distance_block_row_cols(center_block.y, center_block.x);
+
+		cout << "Object " << num_obj << " max coordinates are " << obj_coords_max[89 + num_obj] << "." << endl;
+		cout << "Object " << num_obj << " min coordinates are " << obj_coords_min[89 + num_obj] << "." << endl;
+		cout << "Object dimension " << object_dimension << ", width difference " << obj_coords_max[89 + num_obj].x - obj_coords_min[89 + num_obj].x << endl;
+		cout << "Object dimension " << object_dimension << ", height difference " << obj_coords_max[89 + num_obj].y - obj_coords_min[89 + num_obj].y << endl;
+
+		float width = object_dimension / (obj_coords_max[89 + num_obj].x - obj_coords_min[89 + num_obj].x);
+		float height = object_dimension / (obj_coords_max[89 + num_obj].y - obj_coords_min[89 + num_obj].y);
+
+		dif_dis_arr[num_obj - 1] = center_depth_block[0];
+		depthwidthscale[dif_dis_arr[num_obj - 1]] = width;
+		depthheightscale[dif_dis_arr[num_obj - 1]] = height;
+
+		cout << "Object " << num_obj << ": Depth " << center_depth_block[0] << ", Block Height " << height << "mm, Block Width " << width << "mm." << endl;
+			
+		short check = 0;
+		cout << "Do you want to calibrate to file?: \r\n1 Yes\r\n2 No\r\n";
+		cin >> check;
+
+		if (check == 1)
 		{
-			Point center_block;
-			center_block.x = (obj_coords_min[89 + i].x + (obj_coords_max[89 + i].x - obj_coords_min[89 + i].x) / 2);
-			center_block.y = (obj_coords_min[89 + i].y + (obj_coords_max[89 + i].y - obj_coords_min[89 + i].y) / 2);
-
-			Scalar center_depth_block = block_matrix.get_average_distance_block_row_cols(center_block.y, center_block.x);
-
-			cout << "Object " << i << " max coordinates are " << obj_coords_max[89 + i] << "." << endl;
-			cout << "Object " << i << " min coordinates are " << obj_coords_min[89 + i] << "." << endl;
-			cout << "Object dimension " << object_dimension << ", width difference " << obj_coords_max[89 + i].x - obj_coords_min[89 + i].x << endl;
-			cout << "Object dimension " << object_dimension << ", height difference " << obj_coords_max[89 + i].y - obj_coords_min[89 + i].y << endl;
-
-			float width = object_dimension / (obj_coords_max[89+i].x - obj_coords_min[89+i].x);
-			float height = object_dimension / (obj_coords_max[89+i].y - obj_coords_min[89+i].y);
-
-			dif_dis_arr[i - 1] = center_depth_block[0];
-			depthwidthscale[dif_dis_arr[i - 1]] = width;
-			depthheightscale[dif_dis_arr[i - 1]] = height;
-
-			cout << "Object " << i << ": Depth " << center_depth_block[0] << ", Block Height " << height << "mm, Block Width " << width << "mm." << endl;
-			
-			short check = 0;
-			cout << "Do you want to calibrate to file?: \r\n1 Yes\r\n2 No\r\n";
-			cin >> check;
-
-			if (check == 1)
-			{
-				cout << "Writing to scale_data.csv." << endl;
-				fout.open("scale_data.csv", ios::app);
-				fout << center_depth_block[0] << "," << height << "," << width << endl;
-				fout.close();
-			}
-			
+			cout << "Writing to scale_data.csv." << endl;
+			fout.open("scale_data5.csv", ios::app);
+			fout << center_depth_block[0] << "," << height << "," << width << endl;
+			fout.close();
 		}
+			
 
 		if (print_scale)
 		{
@@ -1337,21 +1442,9 @@ public:
 												//by default all zeros
 	}
 
-	void get_object_size()
-	{
-		for (short row = 0; row < 480 / BLOCKSIZE; row++)
-		{
-			for (short col = 0; col < 640 / BLOCKSIZE; col++)
-			{
-				short labelnum = block_matrix.get_label_block_row_cols(row, col);
-				obj_block_count[labelnum] += 1;
-			}
-		}
-	}
-
 	void set_approx_obj_coords()
 	{
-		for (short i = 0; i < 250; i++) //sets min to be high as default value of array is [0,0]
+		for (short i = 0; i < EXP_OBJ_NUM; i++) //sets min to be high as default value of array is [0,0]
 		{
 			obj_coords_min[i].x = 1000;
 			obj_coords_min[i].y = 1000;
@@ -1372,51 +1465,141 @@ public:
 
 	void deter_obj_area()
 	{
+		Mat depth_image = imread("processed_depth_image.png", IMREAD_GRAYSCALE); //stores the image data into opencv matrix object
+		cout << "Number of Objects " << objcounter << endl;
+		cout << "Determing object areas..." << endl;
 		for (short i = 0; i <= objcounter; i++)
 		{
+			cout << "Object " << i << " has " << obj_block_count[i] << " blocks" << endl;
+			//cout << "Object " << i << ", Min coords " << obj_coords_min[i] << ", Max coords " << obj_coords_max[i] << "." << endl;
 			if (obj_block_count[i] > 0)
 			{
-				for (short row = obj_coords_min[i].y; row <= obj_coords_max[i].y; row++)
+
+				short rowmin = obj_coords_min[i].y - 1;
+				short rowmax = obj_coords_max[i].y + 1;
+				short colmin = obj_coords_min[i].x - 1;
+				short colmax = obj_coords_max[i].x + 1;
+
+				if (rowmin < 0) { rowmin = 0; }
+				if (rowmax > (depth_image.rows / BLOCKSIZE)) { rowmax = depth_image.rows / BLOCKSIZE; }
+				if (colmin < 0) { colmin = 0; }
+				if (colmax > (depth_image.cols / BLOCKSIZE)) { colmax = depth_image.cols / BLOCKSIZE; }
+
+				for (short row = rowmin; row < rowmax; row++)
 				{
-					for (short col = obj_coords_min[i].x; col <= obj_coords_max[i].x; col++)
+					for (short col = colmin; col < colmax; col++)
 					{
+						int counter = 0;
+						float ratio = 1.0;
+						Scalar depth = block_matrix.get_average_distance_block_row_cols(row, col);
 						if (block_matrix.get_label_block_row_cols(row, col) == i)
 						{
-							Scalar depth = block_matrix.get_average_distance_block_row_cols(row, col);
-							obj_area[i] += pow(second_order(depth[0]), 2);
+							bool edge_block = false;
+							if (row - 1 != -1)
+							{
+								if (block_matrix.get_label_block_row_cols(row - 1, col) != i) { edge_block = true; }
+							}
+							if (row + 1 != depth_image.rows / BLOCKSIZE)
+							{
+								if (block_matrix.get_label_block_row_cols(row + 1, col) != i) { edge_block = true; }
+							}
+							if (col - 1 != -1)
+							{
+								if (block_matrix.get_label_block_row_cols(row, col - 1) != i) { edge_block = true; }
+							}
+							if (col + 1 != depth_image.cols / BLOCKSIZE)
+							{
+								if (block_matrix.get_label_block_row_cols(row, col + 1) != i) { edge_block = true; }
+							}
+							
+							if (block_matrix.get_block_homflag_row_cols(row, col) == false && edge_block == true)
+							{
+								cout << "Closer inspection required of block " << row << "," << col << endl;
+								for (short sub_row = (row * StepSlide); sub_row < (row * StepSlide + StepSlide); sub_row++)
+								{
+									for (short sub_col = (col * StepSlide); sub_col < (col * StepSlide + StepSlide); sub_col++)
+									{
+										//cout << i << "," << col << "." << sub_col << "," << row << "." << sub_row << endl;
+										int thresh = THRESHOLD / 2;
+										short pixel_depth = depth_image.at<uchar>(sub_row, sub_col);
+										if (pixel_depth <= (depth[0] + thresh) && pixel_depth >= (depth[0] - thresh)) { counter++; }
+									}
+								}
+								ratio = counter / pow(StepSlide, 2);
+								//cout << "Ratio is " << ratio << endl;
+							}
+							obj_area[i] += ratio * pow(second_order_5(depth[0]), 2);
+						}
+						else
+						{
+							bool adjflag = false;
+
+							if (row - 1 != -1)
+							{
+								if (block_matrix.get_label_block_row_cols(row - 1, col) == i) 
+								{
+									adjflag = true;
+									depth = block_matrix.get_average_distance_block_row_cols(row - 1, col);
+								}
+							}
+							if (row + 1 != depth_image.rows / BLOCKSIZE)
+							{
+								if (block_matrix.get_label_block_row_cols(row + 1, col) == i) 
+								{ 
+									adjflag = true;
+									depth = block_matrix.get_average_distance_block_row_cols(row + 1, col);
+								}
+							}
+							if (col - 1 != -1)
+							{
+								if (block_matrix.get_label_block_row_cols(row, col - 1) == i)
+								{ 
+									adjflag = true;
+									depth = block_matrix.get_average_distance_block_row_cols(row, col - 1);
+								}
+							}
+							if (col + 1 != depth_image.cols / BLOCKSIZE)
+							{
+								if (block_matrix.get_label_block_row_cols(row, col + 1) == i)
+								{ 
+									adjflag = true;
+									depth = block_matrix.get_average_distance_block_row_cols(row, col + 1);
+								}
+							}
+
+
+							if (block_matrix.get_block_homflag_row_cols(row, col) == false && adjflag == true)
+							{
+								for (short sub_row = (row * StepSlide); sub_row < (row * StepSlide + StepSlide); sub_row++)
+								{
+									for (short sub_col = (col * StepSlide); sub_col < (col * StepSlide + StepSlide); sub_col++)
+									{
+										//cout << i << "," << col << "." << sub_col << "," << row << "." << sub_row << endl;
+										int thresh = THRESHOLD / 2;
+										short pixel_depth = depth_image.at<uchar>(sub_row, sub_col);
+										cout << pixel_depth << endl;
+										if (pixel_depth <= (depth[0] + thresh) && pixel_depth >= (depth[0] - thresh)) { counter++; }
+									}
+								}
+								ratio = counter / pow(StepSlide, 2);
+								obj_area[i] += ratio * pow(second_order_5(depth[0]), 2);
+							}
 						}
 					}
 				}
 			}
 		}
-
+		cout << "Done." << endl;
 	}
 
 	void print_obj_areas()
 	{
 		for (short i = 0; i <= objcounter; i++)
 		{
-			cout << "Object " << i << " approximate area is " << obj_area[i] << "mm^2." << endl;
+			if (obj_area[i] != 0) { cout << "Object " << i << " has " << obj_block_count[i] << " blocks and an approximate area of " << obj_area[i] << "mm^2 or " << obj_area[i] / 1000000 << "m^2." << endl; }
 		}
 	}
 
-	//Functions for determining size of blocks at certain depths
-	double first_order(int depth)
-	{
-		double x = 0.5893*depth - 5.4701;
-		return x;
-	}
-
-	double second_order(int depth)
-	{
-		double x = -0.0012*pow(depth,2) + 0.7347*depth - 9.4969;
-		return x;
-	}
-
-	double third_order(int depth)
-	{
-		double x = -0.0001*pow(depth, 3) + 0.0194*pow(depth, 2) - 0.4638*depth + 11.9323;
-		return x;
-	}
+	
 
 	};

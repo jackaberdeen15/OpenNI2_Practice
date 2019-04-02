@@ -37,6 +37,9 @@ protected:
 
 	short label;
 
+	//flag to say block wasnt homogenous 
+	bool homflag;
+
 public:
 
 	// constructor. if nothing assigned- these values will be  -o
@@ -45,6 +48,7 @@ public:
 		label = 99; average_distance = -1;
 		x0 = -1; y0 = -1;
 		width = 0; height = 0;
+		homflag = true;
 	}
 	Scalar get_average_distance() { return average_distance; }
 
@@ -67,6 +71,10 @@ public:
 	int get_width() { return width; }
 	int get_height() { return height; }
 	short get_label() { return label; }
+
+	void set_homflag(bool flag) { homflag = flag; }
+
+	bool get_homflag() { return homflag; }
 };
 
 
@@ -104,7 +112,6 @@ protected:
 	//array of distance blocks (with their dimensions and labels ...) -o
 	distance_block* linear_array;
 	bool linear_array_allocated;
-
 
 	//allocate matrix in memory (matrix that contains pointers to blocks (with labels, rows, cols etc))
 	bool matrix_allocate()
@@ -210,6 +217,45 @@ public:
 	int get_block_rows() { return block_rows; }
 	int get_block_cols() { return block_cols; }
 
+	//function to set whether a block is homogenous or not
+	void set_block_homflag_row_cols(int inp_block_row, int inp_block_col, bool flag)
+	{
+		if ((matrixm_allocated) && (linear_array_allocated))
+			if (inp_block_row >= 0 && inp_block_row < block_rows)
+				if (inp_block_col >= 0 && inp_block_col < block_cols)
+					// for block with these row-column set the average distance
+
+					matrix[inp_block_row][inp_block_col].set_homflag(flag);
+				else
+					cout << endl << "inp_block_col=" << inp_block_col << " exceeds matrix dimension" << endl;
+			else
+				cout << endl << "inp_block_row=" << inp_block_row << " exceeds matrix dimension" << endl;
+		else
+			cout << endl << "Matrix not allocated" << endl;
+	}
+
+	//returns the value to say whether a bloc is homogenous
+	bool get_block_homflag_row_cols(int inp_block_row, int inp_block_col)
+	{
+		bool flag;
+		if ((matrixm_allocated) && (linear_array_allocated))
+			if (inp_block_row >= 0 && inp_block_row < block_rows)
+				if (inp_block_col >= 0 && inp_block_col < block_cols)
+					// for block with these row-column set the average distance
+					//SET THE LABEL FOR THE SINGLE BLOCK. SET_LABEL FUNCTION IS PRESENT IN BLOCK CLASS!!!
+					//here is the function to do it for all the blocks depending on the row/column
+					//short result added *******
+					flag = matrix[inp_block_row][inp_block_col].get_homflag();
+
+				else
+					cout << endl << "inp_block_col=" << inp_block_col << "exceeds matrix dimension" << endl;
+			else
+				cout << endl << "inp_block_row=" << inp_block_row << "exceeds matrix dimension" << endl;
+		else
+			cout << endl << "Matrix not allocated" << endl;
+
+		return flag;
+	}
 
 	bool setup_matrix(int inp_image_width, int inp_image_height, int inp_block_width, int inp_block_height)
 	{
