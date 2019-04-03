@@ -508,8 +508,10 @@ public:
 					cout << " Distance=" << matrix[i][j].get_average_distance() << " ; label=" << matrix[i][j].get_label() << " ;";
 					cout << endl;
 					*/
+					//char c = matrix[i][j].get_label();
 					cout << left;
 					cout <<setw(2)<< matrix[i][j].get_label() << "";
+					//cout << c;
 				}
 				cout << endl;
 			}
