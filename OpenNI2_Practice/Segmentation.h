@@ -41,8 +41,8 @@ protected:
 	short obj_block_count[EXP_OBJ_NUM] = { 0 };
 	double obj_area[EXP_OBJ_NUM] = { 0.0 }; //Stores the approximate area of an object
 	Scalar ave_block_depths[EXP_OBJ_NUM];
-	double obj_height_min[EXP_OBJ_NUM] = { 10000000.0 };
-	double obj_width_min[EXP_OBJ_NUM] = { 10000000.0 };
+	double obj_height_min[EXP_OBJ_NUM] = { 10000.0 };
+	double obj_width_min[EXP_OBJ_NUM] = { 10000.0 };
 	double obj_height_max[EXP_OBJ_NUM] = { 0.0 };
 	double obj_width_max[EXP_OBJ_NUM] = { 0.0 };
 
@@ -227,7 +227,7 @@ private:
 	double second_order_5(int depth)
 	{
 		if (depth == 0) { return 0.0; }
-		double x = 0.0010*pow(depth, 2) + 0.1080*depth + 1.9215;
+		double x = 0.0003*pow(depth, 2) + 0.1846*depth - 0.1115;
 		return x;
 	}
 
@@ -246,169 +246,23 @@ private:
 		return x;
 	}
 
-	void deter_obj_area()
-	{
-		Mat depth_image = imread("processed_depth_image.png", IMREAD_GRAYSCALE); //stores the image data into opencv matrix object
-		//cout << "Number of Objects " << objcounter << endl;
-		//cout << "Determing object areas..." << endl;
-		for (short i = 0; i <= objcounter; i++)
-		{
-			//cout << "Object " << i << " has " << obj_block_count[i] << " blocks and coords " << obj_coords_min[i] << obj_coords_max[i] << endl;
-
-			if (obj_block_count[i] > 0)
-			{
-				//cout << "Aprroximating Area..." << endl;
-				short rowmin = obj_coords_min[i].y - 1;
-				short rowmax = obj_coords_max[i].y + 1;
-				short colmin = obj_coords_min[i].x - 1;
-				short colmax = obj_coords_max[i].x + 1;
-
-				if (rowmin < 0) { rowmin = 0; }
-				if (rowmax > (depth_image.rows / BLOCKSIZE)) { rowmax = depth_image.rows / BLOCKSIZE; }
-				if (colmin < 0) { colmin = 0; }
-				if (colmax > (depth_image.cols / BLOCKSIZE)) { colmax = depth_image.cols / BLOCKSIZE; }
-
-				for (short row = rowmin; row < rowmax; row++)
-				{
-					for (short col = colmin; col < colmax; col++)
-					{
-						int counter = 0;
-						double ratio = 1.0;
-						Scalar depth = block_matrix.get_average_distance_block_row_cols(row, col);
-						if (block_matrix.get_label_block_row_cols(row, col) == i)
-						{
-							//cout << "Block is of object " << i << endl;
-							//conditions to check if the block is at the endge of the object
-							bool edge_block = false;
-							if (row - 1 != -1)
-							{
-								if (block_matrix.get_label_block_row_cols(row - 1, col) != i) { edge_block = true; }
-							}
-							if (row + 1 != depth_image.rows / BLOCKSIZE)
-							{
-								if (block_matrix.get_label_block_row_cols(row + 1, col) != i) { edge_block = true; }
-							}
-							if (col - 1 != -1)
-							{
-								if (block_matrix.get_label_block_row_cols(row, col - 1) != i) { edge_block = true; }
-							}
-							if (col + 1 != depth_image.cols / BLOCKSIZE)
-							{
-								if (block_matrix.get_label_block_row_cols(row, col + 1) != i) { edge_block = true; }
-							}
-
-							//if block is not homogenous and at the edge of the object
-							if (block_matrix.get_block_homflag_row_cols(row, col) == false && edge_block == true)
-							{
-								//cout << "Closer inspection required of block " << row << "," << col << endl;
-								for (short sub_row = (row * StepSlide); sub_row < (row * StepSlide + StepSlide); sub_row++)
-								{
-									for (short sub_col = (col * StepSlide); sub_col < (col * StepSlide + StepSlide); sub_col++)
-									{
-										//cout << i << "," << col << "." << sub_col << "," << row << "." << sub_row << endl;
-										int thresh = THRESHOLD;
-										short pixel_depth = depth_image.at<uchar>(sub_row, sub_col);
-										if (pixel_depth <= (depth[0] + thresh) && pixel_depth >= (depth[0] - thresh)) { counter++; }
-									}
-								}
-								ratio = counter / pow(StepSlide, 2);
-								double dimen = second_order_5(depth[0]);
-								obj_area[i] += ratio * dimen * dimen;
-							}
-							else
-							{
-								double dimen = second_order_5(depth[0]);
-								obj_area[i] += dimen * dimen;
-							}
-
-						}
-						else
-						{
-							bool adjflag = false;
-
-							//is block above that of the object
-							if (row - 1 != -1)
-							{
-								if (block_matrix.get_label_block_row_cols(row - 1, col) == i)
-								{
-									adjflag = true;
-									depth = block_matrix.get_average_distance_block_row_cols(row - 1, col);
-								}
-							}
-							//is block below that of the object
-							if (row + 1 != depth_image.rows / BLOCKSIZE)
-							{
-								if (block_matrix.get_label_block_row_cols(row + 1, col) == i)
-								{
-									adjflag = true;
-									depth = block_matrix.get_average_distance_block_row_cols(row + 1, col);
-								}
-							}
-							//is block to the left of the object
-							if (col - 1 != -1)
-							{
-								if (block_matrix.get_label_block_row_cols(row, col - 1) == i)
-								{
-									adjflag = true;
-									depth = block_matrix.get_average_distance_block_row_cols(row, col - 1);
-								}
-							}
-							//is block to the right of the object
-							if (col + 1 != depth_image.cols / BLOCKSIZE)
-							{
-								if (block_matrix.get_label_block_row_cols(row, col + 1) == i)
-								{
-									adjflag = true;
-									depth = block_matrix.get_average_distance_block_row_cols(row, col + 1);
-								}
-							}
-
-							//if block is adjacent and not homogenous
-							if (block_matrix.get_block_homflag_row_cols(row, col) == false && adjflag == true)
-							{
-								//cout << "Block is not of object " << i << ", but is adjacent." << endl;
-								for (short sub_row = (row * StepSlide); sub_row < (row * StepSlide + StepSlide); sub_row++)
-								{
-									for (short sub_col = (col * StepSlide); sub_col < (col * StepSlide + StepSlide); sub_col++)
-									{
-										//cout << i << "," << col << "." << sub_col << "," << row << "." << sub_row << endl;
-										int thresh = THRESHOLD;
-										short pixel_depth = depth_image.at<uchar>(sub_row, sub_col);
-										if (pixel_depth <= (depth[0] + thresh) && pixel_depth >= (depth[0] - thresh)) { counter++; }
-									}
-								}
-								ratio = counter / pow(StepSlide, 2);
-								double dimen = second_order_5(depth[0]);
-								obj_area[i] += ratio * dimen * dimen;
-							}
-						}
-					}
-				}
-				cout << "Done." << endl;
-			}
-		}
-		cout << "Done." << endl;
-	}
-
 	void deter_obj_height()
 	{
 		Mat depth_image = imread("processed_depth_image.png", IMREAD_GRAYSCALE); //stores the image data into opencv matrix object
 		for (short i = 0; i <= objcounter; i++)
 		{
-			
-
 			if (obj_block_count[i] > 0)
 			{
 				short rowmin = obj_coords_min[i].y - 1;
 				short rowmax = obj_coords_max[i].y + 1;
 				
 				if (rowmin < 0) { rowmin = 0; }
-				if (rowmax > (depth_image.rows / BLOCKSIZE)) { rowmax = depth_image.rows / BLOCKSIZE; }
+				if (rowmax > (depth_image.rows / BLOCKSIZE) - 1) { rowmax = depth_image.rows / BLOCKSIZE - 1; }
 				
-				for (short col = obj_coords_min[i].x; col < obj_coords_max[i].x; col++)
+				for (short col = obj_coords_min[i].x; col <= obj_coords_max[i].x; col++)
 				{
 					double temp_height=0;
-					for (short row = rowmin; row < rowmax; row++)
+					for (short row = rowmin; row <= rowmax; row++)
 					{
 						int counter = 0;
 						double ratio = 1.0;
@@ -511,16 +365,18 @@ private:
 		{
 			if (obj_block_count[i] > 0)
 			{
+				//cout << "Object " << i << endl;
 				short colmin = obj_coords_min[i].x - 1;
 				short colmax = obj_coords_max[i].x + 1;
 
 				if (colmin < 0) { colmin = 0; }
-				if (colmax > (depth_image.cols / BLOCKSIZE)) { colmax = depth_image.cols / BLOCKSIZE; }
+				if (colmax > (depth_image.cols / BLOCKSIZE) - 1) { colmax = depth_image.cols / BLOCKSIZE - 1; }
 
-				for (short row = obj_coords_min[i].y; row < obj_coords_max[i].y; row++)
+				for (short row = obj_coords_min[i].y; row <= obj_coords_max[i].y; row++)
 				{
+					//cout << "Entering row " << row << endl;
 					double temp_width = 0;
-					for (short col = colmin; col < colmax; col++)
+					for (short col = colmin; col <= colmax; col++)
 					{
 						int counter = 0;
 						double ratio = 1.0;
@@ -540,28 +396,33 @@ private:
 							}
 
 							//if block is not homogenous and at the edge of the object
-							if (block_matrix.get_block_homflag_row_cols(row, col) == false && edge_block == true)
+							if (edge_block == true)
 							{
 								double max_counter = 0;
 								for (short sub_row = (row*StepSlide); sub_row < (row*StepSlide + StepSlide); sub_row++)
 								{
 									double stack = 0;
-									for (short sub_col = (row*StepSlide); sub_col < (col*StepSlide + StepSlide); sub_col++)
+									for (short sub_col = (col*StepSlide); sub_col < (col*StepSlide + StepSlide); sub_col++)
 									{
-										int thresh = THRESHOLD;
+										short thresh = THRESHOLD;
 										short pixel_depth = depth_image.at<uchar>(sub_row, sub_col);
 										if (pixel_depth <= (depth[0] + thresh) && pixel_depth >= (depth[0] - thresh)) { stack++; }
 									}
+									//cout << "Stack is " << stack << endl;
 									if (stack > max_counter) { max_counter = stack; }
 								}
 								ratio = max_counter / StepSlide;
 								double dimen = second_order_5(depth[0]);
 								temp_width += ratio * dimen;
+								//cout << "depth is " << depth[0] << ", dimen is " << dimen << ", ratio is " << ratio << endl;
+								//cout << "temp width now " << temp_width << endl;
 							}
 							else
 							{
 								double dimen = second_order_5(depth[0]);
 								temp_width += dimen;
+								//cout << "depth is " << depth[0] << ", dimen is " << dimen << ", ratio is " << ratio << endl;
+								//cout << "temp width now " << temp_width << endl;
 							}
 
 						}
@@ -589,7 +450,7 @@ private:
 							}
 
 							//if block is adjacent and not homogenous
-							if (block_matrix.get_block_homflag_row_cols(row, col) == false && adjflag == true)
+							if (adjflag == true)
 							{
 								double max_counter = 0;
 								for (short sub_row = (row*StepSlide); sub_row < (row*StepSlide + StepSlide); sub_row++)
@@ -606,6 +467,8 @@ private:
 								ratio = max_counter / StepSlide;
 								double dimen = second_order_5(depth[0]);
 								temp_width += ratio * dimen;
+								//cout << "depth is " << depth[0] << ", dimen is " << dimen << ", ratio is " << ratio << endl;
+								//cout << "temp width now " << temp_width << endl;
 							}
 						}
 					}
@@ -678,11 +541,11 @@ private:
 									if (pixel_depth <= (depth[0] + THRESHOLD) && pixel_depth >= (depth[0] - THRESHOLD)) { counter++; }
 								}
 							}
-							obj_area[obj] += (counter/pow(StepSlide,2))*pow(first_order_5(depth[0]), 2);
+							obj_area[obj] += (counter/pow(StepSlide,2))*pow(second_order_5(depth[0]), 2);
 						}
 						else
 						{
-							obj_area[obj] += pow(first_order_5(depth[0]), 2);
+							obj_area[obj] += pow(second_order_5(depth[0]), 2);
 						}
 						
 					}
@@ -735,7 +598,7 @@ private:
 									if (pixel_depth <= (depth[0] + THRESHOLD) && pixel_depth >= (depth[0] - THRESHOLD)) { counter++; }
 								}
 							}
-							obj_area[obj] += (counter / pow(StepSlide, 2))*pow(first_order_5(depth[0]), 2);
+							obj_area[obj] += (counter / pow(StepSlide, 2))*pow(second_order_5(depth[0]), 2);
 						}
 					}
 				}
@@ -759,783 +622,30 @@ private:
 		}
 	}
 
-public:
-	//prev students code modified 
-	//OUTDATED
-	Mat Segmenting(Mat LoadedImage)
+	void deter_object_depths()
 	{
-		namedWindow("1. Loaded img", WINDOW_AUTOSIZE);
-		imshow("1. Loaded img", LoadedImage);
-		waitKey(1);
+		Scalar temp_obj_depths[EXP_OBJ_NUM] = { 0 };
 
-		// Save the result from LoadedImage to file
-		imwrite("Step1_boxes.png", LoadedImage);
-
-
-
-		CausalMeanArray[0] = 0;
-
-		Mat DrawResultGrid = LoadedImage.clone();
-
-		//block_matrix.setup_matrix(LoadedImage.rows, LoadedImage.cols, windows_n_cols, windows_n_rows); 
-		//block_matrix.setup_matrix_defaultvals();
-		block_matrix.setup_matrix(640, 480, BLOCKSIZE, BLOCKSIZE);
-		block_matrix.printToScreen();
-		std::cout << endl;
-
-
-		/*std::cout << "before proceding. print block rows: " << block_matrix.get_block_rows() << endl;
-		std::cout << "before proceding. print block columns: " << block_matrix.get_block_cols() << endl;
-		std::cout << endl;*/
-
-#ifdef option2
-
-		for (int row = 0; row <= LoadedImage.rows - windows_n_rows; row += StepSlide)
+		for (short row = 0; row < 480 / StepSlide; row++)
 		{
-
-			for (int col = 0; col <= LoadedImage.cols - windows_n_cols; col += StepSlide)
+			for (short col = 0; col < 640 / StepSlide; col++)
 			{
-
-
-				//if one of the first blocks (see description in thesis pdf)
-				if (row < BLOCKSIZE || col < BLOCKSIZE) {
-
-
-					//very first block. Scan only current block
-					if (row < BLOCKSIZE && col < BLOCKSIZE) {
-
-
-						Rect windows(col, row, windows_n_rows, windows_n_cols);
-						Mat DrawResultHere = LoadedImage.clone();
-
-						// Draw only rectangle
-						rectangle(DrawResultHere, windows, Scalar(255, 0, 255), 1, 8, 0);
-						// Draw grid
-						rectangle(DrawResultGrid, windows, Scalar(255), 1, 8, 0);
-						// Select windows roi
-						Mat Roi = LoadedImage(windows);
-
-						//function to replace previous print, updates windows
-						update_image(DrawResultHere, DrawResultGrid);
-
-
-						//Here calculate average of each Roi 
-						cv::Scalar tempVal = mean(Roi);
-						//cv::Scalar myMAtMean = tempVal;
-						CausalMeanArray[1] = (unsigned short)tempVal.val[0];
-						std::ostringstream str1;
-						str1 << CausalMeanArray[1];
-
-						//----- here using header to fill the matrix and blocks --------------	
-						Scalar block_avg = tempVal;
-						ostringstream str1_label; //for ROI
-
-
-						int rowmultiplier = row / BLOCKSIZE;// + 1;
-						int colmultiplier = col / BLOCKSIZE;// + 1;
-
-						int blockrow = (row / BLOCKSIZE);// + 1;
-						int blockcol = (col / BLOCKSIZE);// + 1;
-
-						block_matrix.set_average_distance_block_row_cols(blockrow, blockcol, block_avg);
-
-#ifdef PrintMode
-						cout << "Simple extraction: " << tempVal << endl;
-						cout << "Row: " << row << ",    " << "Column: " << col << endl;
-						cout << "BlockRow: " << blockrow << ",    " << "BlockColumn: " << blockcol << endl;
-						//cout << "BlockRow: " << blockrow << ",    " << "BlockColumn: " << blockcol << endl;
-						cout << "Average value assigned to this block: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-						cout << endl;
-#endif
-
-						objcounter++;
-						//-------- using the matrix header
-						block_matrix.set_label_block_row_cols(blockrow, blockcol, objcounter);
-						//create string with the label to print 
-
-						str1_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-						//print label into the image
-						cv::putText(Roi, str1_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);//????
-
-						//----------------------------------
-
-						//print the average value into the image
-						//after all the cases, print the label of the cell and its average value
-						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-						size_array[current_label] = 1;
-					}
-
-
-
-					//any block in the first row. Scan only left block + current block
-					if (row < BLOCKSIZE && col >= BLOCKSIZE) {
-
-						Rect windows(col, row, windows_n_rows, windows_n_cols);
-						Rect windowLeft(col - BLOCKSIZE, row, windows_n_rows, windows_n_cols);
-
-						Mat DrawResultHere = LoadedImage.clone();
-
-						// Draw only rectangle
-						rectangle(DrawResultHere, windows, Scalar(255, 0, 255), 1, 8, 0);//  magenta/fuchsia (here-black)
-						rectangle(DrawResultHere, windowLeft, Scalar(255), 1, 8, 0);
-
-						rectangle(DrawResultGrid, windows, Scalar(255), 1, 8, 0);//  magenta/fuchsia (here-black)	
-
-																				 // Select windows roi
-						Mat Roi = LoadedImage(windows);
-						Mat RoiLeft = LoadedImage(windowLeft);
-
-
-						//function to replace print, updates windows
-						update_image(DrawResultHere, DrawResultGrid);
-
-
-
-						//Here calculate average of each Roi 
-						//1) CURRENT ROI
-						cv::Scalar tempVal = mean(Roi);
-						CausalMeanArray[1] = (unsigned short)tempVal.val[0];
-						std::ostringstream str1;
-						str1 << CausalMeanArray[1];
-						Scalar block_avg = tempVal;
-						ostringstream str1_label; //for ROI
-
-
-						int rowmultiplier = row / BLOCKSIZE;// + 1;
-						int colmultiplier = col / BLOCKSIZE;// + 1;
-															//int blockrow = rowmultiplier + (block_matrix.get_block_cols() * rowmultiplier) + 1; 
-						int blockrow = (row / BLOCKSIZE);// + 1;
-						int blockcol = (col / BLOCKSIZE);// + 1;
-														 //int blockcol = (col / 60)+1;
-						block_matrix.set_average_distance_block_row_cols(blockrow, blockcol, block_avg);
-
-#ifdef PrintMode
-						cout << "Simple extraction: " << tempVal << endl;
-						cout << "Row: " << row << ",    " << "Column: " << col << endl;
-						cout << "BlockRow: " << blockrow << ",    " << "BlockColumn: " << blockcol << endl;
-						//cout << "BlockRow: " << blockrow << ",    " << "BlockColumn: " << blockcol << endl;
-						cout << "Average value assigned to this block: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-						cout << endl;
-#endif
-						//---------------------------------------------------------------------
-
-						//ROI OF THE LEFT BLOCK
-						cv::Scalar tempValLeft = mean(RoiLeft);
-						CausalMeanArray[0] = (unsigned short)tempValLeft.val[0];
-						std::ostringstream str0;
-						str0 << CausalMeanArray[0];
-						//----- here using header to fill the matrix and blocks --------------			
-						Scalar block_avg_left = tempValLeft;
-						int blockrowLeft = blockrow;
-						int blockcolLeft = blockcol - 1;
-						block_matrix.set_average_distance_block_row_cols(blockrowLeft, blockcolLeft, block_avg_left);
-
-#ifdef PrintMode
-						cout << "Simple extraction. LEFT: " << tempValLeft << endl;
-						cout << "Row: " << row << ",    " << "Column: " << col - 1 << endl;
-						cout << "BlockRow: " << blockrowLeft << ",    " << "BlockColumn: " << blockcolLeft << endl;
-						//cout << "BlockRow: " << blockrow << ",    " << "BlockColumn: " << blockcol << endl;
-						cout << "Average value assigned to this block: " << block_matrix.get_average_distance_block_row_cols(blockrowLeft, blockcolLeft) << endl;
-						cout << endl;
-#endif
-
-
-						unsigned short diff_left;
-						diff_left = abs(CausalMeanArray[1] - CausalMeanArray[0]);
-
-						//if different from before, print in random colour + update label and object counter
-						if (diff_left > THRESHOLD) {
-
-							objcounter++;
-							//-------- using the matrix header
-							block_matrix.set_label_block_row_cols(blockrow, blockcol, objcounter);
-							//create string with the label to print 
-
-							str1_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							cv::putText(Roi, str1_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							size_array[current_label] = 1;
-						}
-
-						else if (diff_left <= THRESHOLD) {
-
-							short getLabelLEFT = block_matrix.get_label_block_row_cols(blockrowLeft, blockcolLeft);
-							block_matrix.set_label_block_row_cols(blockrow, blockcol, getLabelLEFT);
-
-							ostringstream str_LEFT_label, str_LEFT_detect;
-							str_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							//				str_LEFT_detect << "L"; //indicates that it's similar to the one on the left
-							cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-							//				cv::putText(Roi, str_LEFT_detect.str(), cv::Point(20, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.3, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							size_array[current_label] = size_array[current_label] + 1;
-						} //end else if
-
-
-					} //end if statement when block R1 any column
-
-
-
-
-
-					  //any row first column block. Scan only upper block + current block
-					if (row >= BLOCKSIZE && col < BLOCKSIZE) {
-
-						Rect windows(col, row, windows_n_rows, windows_n_cols);
-						Rect windowUp(col, row - BLOCKSIZE, windows_n_rows, windows_n_cols);
-						Mat DrawResultHere = LoadedImage.clone();
-
-
-						// Draw only rectangle
-						rectangle(DrawResultHere, windows, Scalar(255, 0, 255), 1, 8, 0);//  magenta/fuchsia (here-black)
-						rectangle(DrawResultHere, windowUp, Scalar(255), 1, 8, 0);
-
-						// Draw grid
-						rectangle(DrawResultGrid, windows, Scalar(255), 1, 8, 0);
-
-						// Select windows roi
-						Mat Roi = LoadedImage(windows);
-						Mat RoiUp = LoadedImage(windowUp);
-
-						//function to replace previous print, updates windows
-						update_image(DrawResultHere, DrawResultGrid);
-
-						//Here calculate average of each Roi /-Olya
-						cv::Scalar tempVal = mean(Roi);
-						//cv::Scalar myMAtMean = tempVal;
-						CausalMeanArray[1] = (unsigned short)tempVal.val[0];
-						std::ostringstream str1;
-						str1 << CausalMeanArray[1];
-						//----- here using header to fill the matrix and blocks --------------	
-						Scalar block_avg = tempVal;
-						ostringstream str1_label; //for ROI
-
-
-						int rowmultiplier = row / BLOCKSIZE;// +1;
-						int colmultiplier = col / BLOCKSIZE;// + 1;
-
-						int blockrow = (row / BLOCKSIZE);// + 1;
-						int blockcol = (col / BLOCKSIZE);// + 1;
-
-						block_matrix.set_average_distance_block_row_cols(blockrow, blockcol, block_avg);
-
-#ifdef PrintMode
-						cout << "Simple extraction: " << tempVal << endl;
-						cout << "Row: " << row << ",    " << "Column: " << col << endl;
-						cout << "BlockRow: " << blockrow << ",    " << "BlockColumn: " << blockcol << endl;
-						//cout << "BlockRow: " << blockrow << ",    " << "BlockColumn: " << blockcol << endl;
-						cout << "Average value assigned to this block: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-						cout << endl;
-#endif
-
-
-						cv::Scalar tempValUp = mean(RoiUp);
-						CausalMeanArray[3] = (unsigned short)tempValUp.val[0];
-						std::ostringstream str3;
-						str3 << CausalMeanArray[3];
-
-						//----- here using header to fill the matrix and blocks --------------			
-						Scalar block_avg_up = tempValUp;
-						int blockrowUp = blockrow - 1;
-						int blockcolUp = blockcol;
-						block_matrix.set_average_distance_block_row_cols(blockrowUp, blockcolUp, block_avg_up);
-
-#ifdef PrintMode
-						cout << "Simple extraction. UP: " << tempValUp << endl;
-						cout << "Row: " << row - 1 << ",    " << "Column: " << col << endl;
-						cout << "BlockRow: " << blockrowUp << ",    " << "BlockColumn: " << blockcolUp << endl;
-						//cout << "BlockRow: " << blockrow << ",    " << "BlockColumn: " << blockcol << endl;
-						cout << "Average value assigned to this block: " << block_matrix.get_average_distance_block_row_cols(blockrowUp, blockcolUp) << endl;
-						cout << endl;
-#endif
-
-
-
-						//mean differences between windows
-						unsigned short diff_up;
-						diff_up = abs(CausalMeanArray[1] - CausalMeanArray[3]);
-
-						//new object -> new label
-						if (diff_up > THRESHOLD) {
-							//update object counter from the previous iteration
-							objcounter++;
-
-							//--------using the matrix header
-							block_matrix.set_label_block_row_cols(blockrow, blockcol, objcounter);
-							//create string with the label to print 
-							str1_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							cv::putText(Roi, str1_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							size_array[current_label] = 1;
-
-						} //end if difference between current and upper blocks bigger than threshold
-
-
-
-						  //similar average distance of the current and the upper blocks
-						if (diff_up <= THRESHOLD) {
-
-							short getLabelUP = block_matrix.get_label_block_row_cols(blockrowUp, blockcolUp);
-							block_matrix.set_label_block_row_cols(blockrow, blockcol, getLabelUP);
-
-							ostringstream str_UP_label, str_UP_detect;
-							str_UP_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							cv::putText(Roi, str_UP_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-
-							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							size_array[current_label] = size_array[current_label] + 1;
-
-						}//end if difference between current and upper blocks is smaller than treshold
-
-
-					} //enf if R1 C1 block
-
-				} //end of the unusual cases
-
-
-
-
-
-				  //if normal position
-				else if (row >= BLOCKSIZE && col >= BLOCKSIZE) {
-					// resulting window
-					Rect windows(col, row, windows_n_rows, windows_n_cols);
-					//My added causal  scanning windows
-					Rect windowUpLeft(col - BLOCKSIZE, row - BLOCKSIZE, windows_n_rows, windows_n_cols);
-					Rect windowUp(col, row - BLOCKSIZE, windows_n_rows, windows_n_cols);
-					Rect windowLeft(col - BLOCKSIZE, row, windows_n_rows, windows_n_cols);
-
-					Mat DrawResultHere = LoadedImage.clone();
-
-					// Draw only rectangle
-					rectangle(DrawResultHere, windows, Scalar(255, 0, 255), 1, 8, 0);//  magenta/fuchsia (here-black)																	 // My added windows to scan
-					rectangle(DrawResultHere, windowUpLeft, Scalar(255), 1, 8, 0);
-					rectangle(DrawResultHere, windowUp, Scalar(255), 1, 8, 0);
-					rectangle(DrawResultHere, windowLeft, Scalar(255), 1, 8, 0);
-
-					// Draw grid
-					rectangle(DrawResultGrid, windows, Scalar(255), 1, 8, 0);
-
-					// Select windows roi
-					Mat Roi = LoadedImage(windows);
-					Mat RoiUpLeft = LoadedImage(windowUpLeft);
-					Mat RoiUp = LoadedImage(windowUp);
-					Mat RoiLeft = LoadedImage(windowLeft);
-
-					//function to replace old print to update window
-					update_image(DrawResultHere, DrawResultGrid);
-
-
-					cv::Scalar tempVal = mean(Roi);
-					CausalMeanArray[1] = (unsigned short)tempVal.val[0];
-					std::ostringstream str1;
-					str1 << CausalMeanArray[1];
-					//----- here using header to fill the matrix and blocks --------------
-					Scalar block_avg = tempVal;
-					ostringstream str1_label; //for ROI
-
-
-					int rowmultiplier = row / BLOCKSIZE;// + 1;
-					int colmultiplier = col / BLOCKSIZE;// + 1;
-					int blockrow = (row / BLOCKSIZE);// + 1;
-					int blockcol = (col / BLOCKSIZE);// + 1;
-					block_matrix.set_average_distance_block_row_cols(blockrow, blockcol, block_avg);
-
-#ifdef PrintMode
-					cout << "Simple extraction: " << tempVal << endl;
-					cout << "Row: " << row << ",    " << "Column: " << col << endl;
-					cout << "BlockRow: " << blockrow << ",    " << "BlockColumn: " << blockcol << endl;
-					//cout << "BlockRow: " << blockrow << ",    " << "BlockColumn: " << blockcol << endl;
-					cout << "Average value assigned to this block: " << block_matrix.get_average_distance_block_row_cols(blockrow, blockcol) << endl;
-					cout << endl;
-#endif
-
-					//2) Left window
-					cv::Scalar tempValLeft = mean(RoiLeft);
-					CausalMeanArray[0] = (unsigned short)tempValLeft.val[0];
-					std::ostringstream str0;
-					str0 << CausalMeanArray[0];
-					//----- here using header to fill the matrix and blocks --------------
-					Scalar block_avg_left = tempValLeft;
-					int blockrowLeft = blockrow;
-					int blockcolLeft = blockcol - 1;
-					block_matrix.set_average_distance_block_row_cols(blockrowLeft, blockcolLeft, block_avg_left);
-
-#ifdef PrintMode
-					cout << "Simple extraction. LEFT: " << tempValLeft << endl;
-					cout << "Row: " << row << ",    " << "Column: " << col - 1 << endl;
-					cout << "BlockRow: " << blockrowLeft << ",    " << "BlockColumn: " << blockcolLeft << endl;
-					//cout << "BlockRow: " << blockrow << ",    " << "BlockColumn: " << blockcol << endl;
-					cout << "Average value assigned to this block: " << block_matrix.get_average_distance_block_row_cols(blockrowLeft, blockcolLeft) << endl;
-					cout << endl;
-#endif
-
-
-					//3)Upleft window
-					cv::Scalar tempValUpLeft = mean(RoiUpLeft);
-					CausalMeanArray[2] = (unsigned short)tempValUpLeft.val[0];
-					std::ostringstream str2;
-					str2 << CausalMeanArray[2];
-
-					//----- here using header to fill the matrix and blocks --------------
-					Scalar block_avg_upleft = tempValUpLeft;
-					int blockrowUpLeft = blockrow - 1;
-					int blockcolUpLeft = blockcol - 1;
-					block_matrix.set_average_distance_block_row_cols(blockrowUpLeft, blockcolUpLeft, block_avg_upleft);
-
-#ifdef PrintMode
-					cout << "Simple extraction. UPLEFT: " << tempValUpLeft << endl;
-					cout << "Row: " << row - 1 << ",    " << "Column: " << col - 1 << endl;
-					cout << "BlockRow: " << blockrowUpLeft << ",    " << "BlockColumn: " << blockcolUpLeft << endl;
-					//cout << "BlockRow: " << blockrow << ",    " << "BlockColumn: " << blockcol << endl;
-					cout << "Average value assigned to this block: " << block_matrix.get_average_distance_block_row_cols(blockrowUpLeft, blockcolUpLeft) << endl;
-					cout << endl;
-#endif
-
-
-					//4)Upper window
-					cv::Scalar tempValUp = mean(RoiUp);
-					CausalMeanArray[3] = (unsigned short)tempValUp.val[0];
-					std::ostringstream str3;
-					str3 << CausalMeanArray[3];
-
-					//----- here using header to fill the matrix and blocks --------------
-					Scalar block_avg_up = tempValUp;
-					int blockrowUp = blockrow - 1;
-					int blockcolUp = blockcol;
-					block_matrix.set_average_distance_block_row_cols(blockrowUp, blockcolUp, block_avg_up);
-
-#ifdef PrintMode
-					cout << "Simple extraction. UP: " << tempValUp << endl;
-					cout << "Row: " << row - 1 << ",    " << "Column: " << col << endl;
-					cout << "BlockRow: " << blockrowUp << ",    " << "BlockColumn: " << blockcolUp << endl;
-					//cout << "BlockRow: " << blockrow << ",    " << "BlockColumn: " << blockcol << endl;
-					cout << "Average value assigned to this block: " << block_matrix.get_average_distance_block_row_cols(blockrowUp, blockcolUp) << endl;
-					cout << endl;
-#endif
-					// assigning average values finishes here
-
-
-					//mean differences between windows 
-
-					unsigned short diff_left;
-					diff_left = abs(CausalMeanArray[1] - CausalMeanArray[0]);
-
-					unsigned short diff_upleft;
-					diff_upleft = abs(CausalMeanArray[1] - CausalMeanArray[2]);
-
-					unsigned short diff_up;
-					diff_up = abs(CausalMeanArray[1] - CausalMeanArray[3]);
-
-
-
-					//if all 3 are different
-					if (((diff_left > THRESHOLD) && (diff_up > THRESHOLD) && (diff_upleft > THRESHOLD))) {
-						//update object counter from previous iteration
-						objcounter++;
-
-						//-------- using the matrix header
-						block_matrix.set_label_block_row_cols(blockrow, blockcol, objcounter);
-						//create string with the label to print
-
-						str1_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-						cv::putText(Roi, str1_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-						size_array[current_label] = 1;
-
-					} //end if all 4 different
-
-
-
-
-
-					  //if all four similar values
-					else if ((diff_left <= THRESHOLD) && (diff_upleft <= THRESHOLD) && (diff_up <= THRESHOLD)) {
-
-
-						// collect labels of all surrounding blocks
-						//short label_array[4];
-						short first = block_matrix.get_label_block_row_cols(blockrowUpLeft, blockcolUpLeft); //upleft = array position 1
-						short second = block_matrix.get_label_block_row_cols(blockrowUp, blockcolUp);  //up = array position 2
-						short third = block_matrix.get_label_block_row_cols(blockcolLeft, blockcolLeft);   //left = array position 3
-
-
-																										   //if all three with the same label; take left by default
-						if (first == second == third) {
-
-
-							//blockrowUpLeft
-							short getLabelLEFT = block_matrix.get_label_block_row_cols(blockrowLeft, blockcolLeft);
-							block_matrix.set_label_block_row_cols(blockrow, blockcol, getLabelLEFT);
-
-							ostringstream str_LEFT_label, str_LEFT_detect;
-							str_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-
-							cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							size_array[current_label] = size_array[current_label] + 1;
-
-						}
-
-
-						//if labels of upper and upper-left similar; upleft taken
-						else if (first = second) {
-
-							short getLabelUP_UPLEFT = block_matrix.get_label_block_row_cols(blockrowUpLeft, blockcolUpLeft);
-							block_matrix.set_label_block_row_cols(blockrow, blockcol, getLabelUP_UPLEFT);
-
-							ostringstream str_UP_UPLEFT_label, str_UP_UPLEFT_detect;
-							str_UP_UPLEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							//			str_UP_UPLEFT_detect << "UUL";
-							cv::putText(Roi, str_UP_UPLEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							size_array[current_label] = size_array[current_label] + 1;
-
-						}
-
-
-						//left and upleft; left taken
-						else if (first = third) {
-
-							short getLabelUPLEFT_LEFT = block_matrix.get_label_block_row_cols(blockrowLeft, blockcolLeft);
-							block_matrix.set_label_block_row_cols(blockrow, blockcol, getLabelUPLEFT_LEFT);
-
-							ostringstream str_UPLEFT_LEFT_label, str_UPLEFT_LEFT_detect;
-							str_UPLEFT_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-
-							cv::putText(Roi, str_UPLEFT_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							size_array[current_label] = size_array[current_label] + 1;
-
-						}
-
-
-						//up and left; left taken
-						else if (second == third) {
-
-							short getLabelUP_LEFT = block_matrix.get_label_block_row_cols(blockrowLeft, blockcolLeft);
-							block_matrix.set_label_block_row_cols(blockrow, blockcol, getLabelUP_LEFT);
-
-							ostringstream str_UP_LEFT_label, str_UP_LEFT_detect;
-							str_UP_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							//			str_UP_LEFT_detect << "U-L";
-							cv::putText(Roi, str_UP_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-							//			cv::putText(Roi, str_UP_LEFT_detect.str(), cv::Point(20, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.3, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							size_array[current_label] = size_array[current_label] + 1;
-
-						}
-
-						//when all three different labels-> prefer left label
-						else if (first != second != third) {
-
-							short getLabelLEFT = block_matrix.get_label_block_row_cols(blockrowLeft, blockcolLeft);
-							block_matrix.set_label_block_row_cols(blockrow, blockcol, getLabelLEFT);
-
-							ostringstream str_LEFT_label, str_LEFT_detect;
-							str_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							//			str_LEFT_detect << "all";
-							cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-							//			cv::putText(Roi, str_LEFT_detect.str(), cv::Point(20, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.3, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-							int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-							size_array[current_label] = size_array[current_label] + 1;
-
-						}
-
-
-					}//if all four have similar values
-
-
-					 //when both left and upleft are similar -> prefer left
-					else if ((diff_left <= THRESHOLD) && (diff_upleft <= THRESHOLD)) {
-						short getLabelLEFT = block_matrix.get_label_block_row_cols(blockrowLeft, blockcolLeft);
-						block_matrix.set_label_block_row_cols(blockrow, blockcol, getLabelLEFT);
-
-						ostringstream str_LEFT_label, str_LEFT_detect;
-						str_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-
-						cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-						size_array[current_label] = size_array[current_label] + 1;
-
-					}
-
-
-					//when both upleft and up similar -> prefer up
-					else if ((diff_upleft <= THRESHOLD) && (diff_up <= THRESHOLD)) {
-						short getLabelUp = block_matrix.get_label_block_row_cols(blockrowUp, blockcolUp);
-						block_matrix.set_label_block_row_cols(blockrow, blockcol, getLabelUp);
-
-						ostringstream str_Up_label, str_Up_detect;
-						str_Up_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-						//				str_Up_detect << "ulu";
-						cv::putText(Roi, str_Up_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-						//				cv::putText(Roi, str_Up_detect.str(), cv::Point(20, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.3, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-						size_array[current_label] = size_array[current_label] + 1;
-
-					}
-
-					//when both left and up similar -> prefer left
-					else if ((diff_left <= THRESHOLD) && (diff_up <= THRESHOLD)) {
-
-						short getLabelLEFT = block_matrix.get_label_block_row_cols(blockrowLeft, blockcolLeft);
-						block_matrix.set_label_block_row_cols(blockrow, blockcol, getLabelLEFT);
-
-						ostringstream str_LEFT_label, str_LEFT_detect;
-						str_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-						//					str_LEFT_detect << "lul";
-						cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-						//					cv::putText(Roi, str_LEFT_detect.str(), cv::Point(20, 30), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.3, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-						size_array[current_label] = size_array[current_label] + 1;
-
-					}
-
-					//just left similar
-					else if (diff_left <= THRESHOLD) {
-						short getLabelLEFT = block_matrix.get_label_block_row_cols(blockrowLeft, blockcolLeft);
-						block_matrix.set_label_block_row_cols(blockrow, blockcol, getLabelLEFT);
-
-						ostringstream str_LEFT_label, str_LEFT_detect;
-						str_LEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-
-						cv::putText(Roi, str_LEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-						size_array[current_label] = size_array[current_label] + 1;
-
-					}
-
-					//just upleft similar
-					else if (diff_upleft <= THRESHOLD) {
-						short getLabelUPLEFT = block_matrix.get_label_block_row_cols(blockrowUpLeft, blockcolUpLeft);
-						block_matrix.set_label_block_row_cols(blockrow, blockcol, getLabelUPLEFT);
-
-						ostringstream str_UPLEFT_label, str_UPLEFT_detect;
-						str_UPLEFT_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-
-						cv::putText(Roi, str_UPLEFT_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-						size_array[current_label] = size_array[current_label] + 1;
-
-					}
-
-					//just up similar
-					else if (diff_up <= THRESHOLD) {
-						short getLabelUP = block_matrix.get_label_block_row_cols(blockrowUp, blockcolUp);
-						block_matrix.set_label_block_row_cols(blockrow, blockcol, getLabelUP);
-
-						ostringstream str_UP_label, str_UP_detect;
-						str_UP_label << block_matrix.get_label_block_row_cols(blockrow, blockcol);
-
-						cv::putText(Roi, str_UP_label.str(), cv::Point(7, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						cv::putText(Roi, str1.str(), cv::Point(7, 7), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.5, cv::Scalar(255, 255, 255), 1, 8, false);
-
-						int current_label = block_matrix.get_label_block_row_cols(blockrow, blockcol);
-						size_array[current_label] = size_array[current_label] + 1;
-
-					}
-
-
-					//something not covered
-
-
-					else {
-						//std::cout << "NONE OF THE ABOVE" << endl;
-					}
-
-
-				} //end ifrow >=60 and col >=60
-
-
-
-			}//end columns
-
-
-		}//end rows
-
-
-
-
-		for (int i = 0; i < LABEL_ARRAYSIZE; i++) {
-			if (size_array[i] == 0)
-				std::cout << "NAN" << "-";
-
-			else
-				std::cout << size_array[i] << "-";
+				short label = block_matrix.get_label_block_row_cols(row, col);
+				temp_obj_depths[label] += block_matrix.get_average_distance_block_row_cols(row, col);
+			}
 		}
-		std::cout << endl;
-
-		return DrawResultGrid;
-
-#endif
-	}//end segmenting()
-	//OUTDATEd
-	void update_image(Mat DrawResultHere, Mat DrawResultGrid) {
-		namedWindow("2. Draw Rectangle", WINDOW_AUTOSIZE);
-		imshow("2. Draw Rectangle", DrawResultHere);
-		waitKey(1);
-		imwrite("Step2_boxes.png", DrawResultHere);
-
-		// Show grid
-		namedWindow("3. Show Grid", WINDOW_AUTOSIZE);
-		imshow("3. Show Grid", DrawResultGrid);
-		waitKey(1);
-		imwrite("Step3_boxes.png", DrawResultGrid);
+		for (short obj = 0; obj <= objcounter; obj++)
+		{
+			ave_block_depths[obj] = temp_obj_depths[obj] / obj_block_count[obj];
+		}
 	}
 
-	void setup_block_matrix(int width = 640, int height = 480, int blockwidth = BLOCKSIZE, int blockheight = BLOCKSIZE)
+public:
+	void setup_block_matrix(int width = 640, int height = 480)
 	{
 		if (!setup) {
 			printf("Setting up block matrix...\r\n");
-			block_matrix.setup_matrix(width, height, blockwidth, blockheight);
+			block_matrix.setup_matrix(width, height, BLOCKSIZE, BLOCKSIZE);
 			printf("Done.\r\n");
 
 			printf("Block No. rows = %d, No. cols = %d.\r\n", block_matrix.get_block_rows(), block_matrix.get_block_cols());
@@ -1623,7 +733,7 @@ public:
 				Rect windows(col, row, windows_n_rows, windows_n_cols);
 
 				// Draw grid
-				rectangle(DrawResultGrid, windows, Scalar(255), 1, 8, 0);
+				//rectangle(DrawResultGrid, windows, Scalar(255), 1, 8, 0);
 
 				// Select windows roi
 				Mat Roi = LoadedImage(windows);
@@ -1658,7 +768,7 @@ public:
 		return DrawResultGrid;
 	}
 
-	void Grouping(Mat LoadedImage, bool print=false) {
+	void Grouping(Mat LoadedImage, bool colour=false , bool print=false) {
 		
 		CausalMeanArray[0] = 0;
 
@@ -1846,7 +956,7 @@ public:
 		printf("Done.\r\n");
 		
 		//sets all blocks outside this boundary to have the labe zero
-		enforce_boundaries(20,120);
+		if (!colour) { enforce_boundaries(20, 80); }
 
 		get_object_block_count();
 
@@ -1998,26 +1108,30 @@ public:
 	{
 		//deter_obj_area_basic();
 		deter_obj_area_inter();
-		//deter_obj_area();
-		//deter_obj_height();
-		//deter_obj_width();
+		deter_object_depths();
+		deter_obj_height();
+		deter_obj_width();
 	}
-
 
 	void print_obj_areas()
 	{
 		for (short i = 0; i <= objcounter; i++)
 		{
-			if (obj_block_count[i] != 0)
+			if (obj_block_count[i] > 4)
 			{ 
 				cout << "Object " << i << " has " << obj_block_count[i] << " blocks, " << obj_coords_min[i] << ", " << obj_coords_max[i] << "." << endl;
-				cout  << "Approximate area of " << obj_area[i] << "mm^2 or " << obj_area[i] / 1000000 << "m^2." << endl;
+				cout << "Average depth of " << ave_block_depths[i][0];
+				cout  << " and Approximate area of " << obj_area[i] << "mm^2 or " << obj_area[i] / 1000000 << "m^2." << endl;
 				cout << "Max height " << obj_height_max[i] << "mm, min height " << obj_height_min[i] << "mm.";
 				cout << " Max width " << obj_width_max[i] << "mm, min width " << obj_width_min[i] << "mm.\n" << endl;
 			}
 		}
 	}
 
+	double* return_obj_heights() { return obj_height_max; }
 	
+	double* return_obj_width() { return obj_width_max; }
+
+	Scalar* return_obj_depths() { return ave_block_depths; }
 
 	};

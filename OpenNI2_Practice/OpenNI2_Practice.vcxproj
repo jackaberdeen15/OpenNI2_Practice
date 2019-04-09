@@ -189,6 +189,7 @@ xcopy "C:\glut\glut64.dll" "$(OutDir) /y /d
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="3dMapping.h" />
     <ClInclude Include="MatHeader.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Segmentation.h" />
