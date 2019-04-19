@@ -19,7 +19,7 @@
 //#define SimpleAssignment
 //#define option1
 #define option2
-#define BLOCKSIZE 5
+#define BLOCKSIZE 4
 #define THRESHOLD 6
 #define LABEL_ARRAYSIZE 150 //typically depends on how many labels to be stored (depends on the scanning window size)
 #define EXP_OBJ_NUM 1000
@@ -69,7 +69,7 @@ private:
 		{
 			if (obj_block_count[i] == 0)
 			{
-				cout << "Object " << i << " was removed." << endl;
+				//cout << "Object " << i << " was removed." << endl;
 				for (short row = 0; row < 480 / BLOCKSIZE; row++)
 				{
 					for (short col = 0; col < 640 / BLOCKSIZE; col++)
@@ -216,7 +216,7 @@ private:
 	}
 
 	//Functions for determining size of blocks (5*5) at certain depths
-	double first_order_5(int depth)
+	double first_order_5(double depth)
 	{
 		//0.2393   -1.8726
 		if (depth == 0) { return 0.0; }
@@ -224,25 +224,48 @@ private:
 		return x;
 	}
 
-	double second_order_5(int depth)
+	double second_order_5(double depth)
 	{
 		if (depth == 0) { return 0.0; }
 		double x = 0.0003*pow(depth, 2) + 0.1846*depth - 0.1115;
 		return x;
 	}
 
-	double third_order_5(int depth)
+	double third_order_5(double depth)
 	{
 		if (depth == 0) { return 0.0; }
 		double x = 0.0000*pow(depth, 3) - 0.0010*pow(depth, 2) + 0.2504*depth - 0.9892;
 		return x;
 	}
 
-	double fourth_order_5(int depth)
+	double fourth_order_5(double depth)
 	{
 		//0.0000   -0.0000    0.0029    0.0601    1.8921
 		if (depth == 0) { return 0.0; }
 		double x = 0.0000*pow(depth, 4) - 0.0000*pow(depth, 3) + 0.0029*pow(depth, 2) + 0.0601*depth + 1.8921;
+		return x;
+	}
+
+	//Functions for determining size of blocks (5*5) at certain depths
+	double first_order_4(double depth)
+	{
+		//0.2393   -1.8726
+		if (depth == 0) { return 0.0; }
+		double x = 0.1935*depth - 1.8189;
+		return x;
+	}
+
+	double second_order_4(double depth)
+	{
+		if (depth == 0) { return 0.0; }
+		double x = 0.0002*pow(depth, 2) + 0.1571*depth - 0.5696;
+		return x;
+	}
+
+	double third_order_4(double depth)
+	{
+		if (depth == 0) { return 0.0; }
+		double x = -0.0000*pow(depth, 3) + 0.0017*pow(depth, 2) + 0.0507*depth - 1.7977;
 		return x;
 	}
 
@@ -282,7 +305,7 @@ private:
 							}
 
 							//if block is not homogenous and at the edge of the object
-							if (block_matrix.get_block_homflag_row_cols(row, col) == false && edge_block == true)
+							if (edge_block == true)//&& block_matrix.get_block_homflag_row_cols(row, col) == false) 
 							{
 								double max_counter = 0;
 								for (short sub_col = (col*StepSlide); sub_col < (col*StepSlide + StepSlide); sub_col++)
@@ -297,12 +320,12 @@ private:
 									if (stack > max_counter) { max_counter = stack; }
 								}
 								ratio = max_counter / StepSlide;
-								double dimen = second_order_5(depth[0]);
+								double dimen = second_order_4(depth[0]);
 								temp_height += ratio * dimen;
 							}
 							else
 							{
-								double dimen = second_order_5(depth[0]);
+								double dimen = second_order_4(depth[0]);
 								temp_height += dimen;
 							}
 
@@ -331,7 +354,7 @@ private:
 							}
 
 							//if block is adjacent and not homogenous
-							if (block_matrix.get_block_homflag_row_cols(row, col) == false && adjflag == true)
+							if (adjflag == true)// && block_matrix.get_block_homflag_row_cols(row, col) == false )
 							{
 								double max_counter = 0;
 								for (short sub_col = (col*StepSlide); sub_col < (col*StepSlide + StepSlide); sub_col++)
@@ -346,7 +369,7 @@ private:
 									if (stack > max_counter) { max_counter = stack; }
 								}
 								ratio = max_counter / StepSlide;
-								double dimen = second_order_5(depth[0]);
+								double dimen = second_order_4(depth[0]);
 								temp_height += ratio * dimen;
 							}
 						}
@@ -396,7 +419,7 @@ private:
 							}
 
 							//if block is not homogenous and at the edge of the object
-							if (edge_block == true)
+							if (edge_block == true)// && block_matrix.get_block_homflag_row_cols(row, col) != true)
 							{
 								double max_counter = 0;
 								for (short sub_row = (row*StepSlide); sub_row < (row*StepSlide + StepSlide); sub_row++)
@@ -412,14 +435,14 @@ private:
 									if (stack > max_counter) { max_counter = stack; }
 								}
 								ratio = max_counter / StepSlide;
-								double dimen = second_order_5(depth[0]);
+								double dimen = second_order_4(depth[0]);
 								temp_width += ratio * dimen;
 								//cout << "depth is " << depth[0] << ", dimen is " << dimen << ", ratio is " << ratio << endl;
 								//cout << "temp width now " << temp_width << endl;
 							}
 							else
 							{
-								double dimen = second_order_5(depth[0]);
+								double dimen = second_order_4(depth[0]);
 								temp_width += dimen;
 								//cout << "depth is " << depth[0] << ", dimen is " << dimen << ", ratio is " << ratio << endl;
 								//cout << "temp width now " << temp_width << endl;
@@ -450,7 +473,7 @@ private:
 							}
 
 							//if block is adjacent and not homogenous
-							if (adjflag == true)
+							if (adjflag == true)// && block_matrix.get_block_homflag_row_cols(row, col) != true)
 							{
 								double max_counter = 0;
 								for (short sub_row = (row*StepSlide); sub_row < (row*StepSlide + StepSlide); sub_row++)
@@ -465,7 +488,7 @@ private:
 									if (stack > max_counter) { max_counter = stack; }
 								}
 								ratio = max_counter / StepSlide;
-								double dimen = second_order_5(depth[0]);
+								double dimen = second_order_4(depth[0]);
 								temp_width += ratio * dimen;
 								//cout << "depth is " << depth[0] << ", dimen is " << dimen << ", ratio is " << ratio << endl;
 								//cout << "temp width now " << temp_width << endl;
@@ -490,7 +513,7 @@ private:
 					if (block_matrix.get_label_block_row_cols(row, col) == obj)
 					{
 						Scalar depth = block_matrix.get_average_distance_block_row_cols(row, col);
-						obj_area[obj] += pow(second_order_5(depth[0]),2);
+						obj_area[obj] += pow(first_order_4(depth[0]), 2);
 					}
 				}
 			}
@@ -503,50 +526,102 @@ private:
 
 		for (short obj = 0; obj <= objcounter; obj++)
 		{
-			for (short col = obj_coords_min[obj].x; col <= obj_coords_max[obj].x; col++)
+			short rowmin = obj_coords_min[obj].y - 1;
+			short rowmax = obj_coords_max[obj].y + 1;
+			short colmin = obj_coords_min[obj].x - 1;
+			short colmax = obj_coords_max[obj].x + 1;
+			
+			if (rowmin < 0) { rowmin = 0; }
+			if (rowmax > (depth_image.rows / StepSlide) - 1) { rowmax = depth_image.rows / StepSlide - 1; }
+			if (colmin < 0) { colmin = 0; }
+			if (colmax > (depth_image.cols / StepSlide) - 1) { colmax = depth_image.cols / StepSlide - 1; }
+			
+
+
+			for (short col = rowmin; col <= rowmax; col++)
 			{
-				for (short row = obj_coords_min[obj].y; row <= obj_coords_max[obj].y; row++)
+				for (short row = rowmin; row <= rowmax; row++)
 				{
 					if (block_matrix.get_label_block_row_cols(row, col) == obj)
 					{
+						cout << "block " << row << "," << col << endl;
 						bool edge_flag = false;
 						
 						//Is block at the edge of the object
 						if (row - 1 != -1)
 						{
-							if (block_matrix.get_label_block_row_cols(row - 1, col) != obj) { edge_flag = true; }
+							if (block_matrix.get_label_block_row_cols(row - 1, col) != obj)
+							{
+								edge_flag = true;
+								cout << "block " << row << "," << col << " is at the edge of object " << obj << endl;
+								cout << "block homogeniety " << block_matrix.get_block_homflag_row_cols(row, col) << endl;
+							}
 						}
-						if (row + 1 != 480 / StepSlide)
+						if (row + 1 != depth_image.rows / StepSlide)
 						{
-							if (block_matrix.get_label_block_row_cols(row + 1, col) != obj) { edge_flag = true; }
+							if (block_matrix.get_label_block_row_cols(row + 1, col) != obj)
+							{
+								edge_flag = true;
+								cout << "block " << row << "," << col << " is at the edge of object " << obj << endl;
+								cout << "block homogeniety " << block_matrix.get_block_homflag_row_cols(row, col) << endl;
+							}							
 						}
 						if (col - 1 != -1)
 						{
-							if (block_matrix.get_label_block_row_cols(row, col - 1) != obj) { edge_flag = true; }
+							if (block_matrix.get_label_block_row_cols(row, col - 1) != obj)
+							{ 
+								edge_flag = true; 
+								cout << "block " << col << "," << row << " is at the edge of object " << obj << endl;
+								cout << "block homogeniety " << block_matrix.get_block_homflag_row_cols(row, col) << endl;
+							}							
 						}
-						if (col + 1 != 640 / StepSlide)
+						if (col + 1 != depth_image.cols / StepSlide)
 						{
-							if (block_matrix.get_label_block_row_cols(row, col + 1) != obj) { edge_flag = true; }
+							if (block_matrix.get_label_block_row_cols(row, col + 1) != obj)
+							{
+								edge_flag = true;
+								cout << "block " << row << "," << col << " is at the edge of object " << obj << endl;
+								cout << "block homogeniety " << block_matrix.get_block_homflag_row_cols(row, col) << endl;
+							}
 						}
 
 						Scalar depth = block_matrix.get_average_distance_block_row_cols(row, col);
-						if (edge_flag)
+
+						if (edge_flag==true && block_matrix.get_block_homflag_row_cols(row, col)==false)
 						{
+							cout << "entered inspection function" << endl;
+							//cout << "edge block" << endl;
 							short counter = 0;
 							for (short sub_row = (row*StepSlide); sub_row < (row*StepSlide + StepSlide); sub_row++)
 							{
 								for (short sub_col = (col*StepSlide); sub_col < (col*StepSlide + StepSlide); sub_col++)
 								{
-									short pixel_depth = depth_image.at<uchar>(sub_row, sub_col);
-									if (pixel_depth <= (depth[0] + THRESHOLD) && pixel_depth >= (depth[0] - THRESHOLD)) { counter++; }
+									uint8_t pixel_depth = depth_image.at<uchar>(sub_row, sub_col);
+									
+									//if ((pixel_depth <= (depth[0] + THRESHOLD)) && (pixel_depth >= (depth[0] - THRESHOLD)))
+									if (pixel_depth <= (ave_block_depths[obj][0] + THRESHOLD) && pixel_depth >= (ave_block_depths[obj][0] - THRESHOLD))
+									{
+										counter++;
+										//cout << "Within threshold, current counter for block " << row << "," << col << " is " << counter << endl;
+									}
 								}
 							}
-							obj_area[obj] += (counter/pow(StepSlide,2))*pow(second_order_5(depth[0]), 2);
+
+							double ratio = counter / pow(StepSlide, 2);
+							obj_area[obj] += (ratio * pow(first_order_4(depth[0]), 2));
+							cout << "Counter is " << counter << ", ratio is " << ratio << ", added area is " << ratio * pow(first_order_4(depth[0]), 2) << endl;
+							//cout << ratio * pow(first_order_4(depth[0]), 2) << endl;
 						}
 						else
 						{
-							obj_area[obj] += pow(second_order_5(depth[0]), 2);
+							cout << "entered default function" << endl;
+							//cout << "not edge block" << endl;
+							obj_area[obj] += pow(first_order_4(depth[0]), 2);
+							cout << "Added area is " << pow(first_order_4(depth[0]), 2) << endl;
+							//cout << pow(first_order_4(depth[0]), 2) << endl;
 						}
+						cout << "Current object area is " << obj_area[obj] << endl;
+						cout << endl;
 						
 					}
 					else
@@ -587,20 +662,25 @@ private:
 							}
 						}
 						
-						if (adj_flag)
+						if (adj_flag) //&& block_matrix.get_block_homflag_row_cols(row,col)!=true)
 						{
+							//cout << "adjacent block" << endl;
 							short counter = 0;
 							for (short sub_row = (row*StepSlide); sub_row < (row*StepSlide + StepSlide); sub_row++)
 							{
 								for (short sub_col = (col*StepSlide); sub_col < (col*StepSlide + StepSlide); sub_col++)
 								{
-									short pixel_depth = depth_image.at<uchar>(sub_row, sub_col);
+									uint8_t pixel_depth = depth_image.at<uchar>(sub_row, sub_col);
+									//if (pixel_depth <= (ave_block_depths[obj][0] + THRESHOLD) && pixel_depth >= (ave_block_depths[obj][0] - THRESHOLD)) { counter++; }
 									if (pixel_depth <= (depth[0] + THRESHOLD) && pixel_depth >= (depth[0] - THRESHOLD)) { counter++; }
 								}
 							}
-							obj_area[obj] += (counter / pow(StepSlide, 2))*pow(second_order_5(depth[0]), 2);
+							double ratio = counter / pow(StepSlide, 2);
+							obj_area[obj] += ratio * pow(first_order_4(depth[0]), 2);
+							//cout << ratio * pow(first_order_4(depth[0]), 2) << endl;
 						}
 					}
+					//cout << "Current area of object " << obj << " is " << obj_area[obj] << "mm" << endl;
 				}
 			}
 		}
@@ -615,8 +695,8 @@ private:
 				Scalar depth = block_matrix.get_average_distance_block_row_cols(row, col);
 				if (depth[0] > up_lim || depth[0] < low_lim)
 				{
-					block_matrix.set_label_block_row_cols(row, col, 0);
-					block_matrix.set_average_distance_block_row_cols(row, col, 0);
+					block_matrix.set_label_block_row_cols(row, col, -1);
+					block_matrix.set_average_distance_block_row_cols(row, col, -1);
 				}
 			}
 		}
@@ -956,7 +1036,7 @@ public:
 		printf("Done.\r\n");
 		
 		//sets all blocks outside this boundary to have the labe zero
-		if (!colour) { enforce_boundaries(20, 80); }
+		if (!colour) { enforce_boundaries(20, 120); }
 
 		get_object_block_count();
 
@@ -1052,7 +1132,7 @@ public:
 		if (check == 1)
 		{
 			cout << "Writing to scale_data.csv." << endl;
-			fout.open("scale_data52.csv", ios::app);
+			fout.open("scale_data4.csv", ios::app);
 			fout << center_depth_block[0] << "," << height << "," << width << endl;
 			fout.close();
 		}
@@ -1106,9 +1186,9 @@ public:
 
 	void deter_obj_dimen()
 	{
+		deter_object_depths();
 		//deter_obj_area_basic();
 		deter_obj_area_inter();
-		deter_object_depths();
 		deter_obj_height();
 		deter_obj_width();
 	}
