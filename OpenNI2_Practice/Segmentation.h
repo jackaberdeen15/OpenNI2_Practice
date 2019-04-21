@@ -251,21 +251,21 @@ private:
 	{
 		//0.2393   -1.8726
 		if (depth == 0) { return 0.0; }
-		double x = 0.1935*depth - 1.8189;
+		double x = 0.1906*depth - 1.5882;
 		return x;
 	}
 
 	double second_order_4(double depth)
 	{
 		if (depth == 0) { return 0.0; }
-		double x = 0.0002*pow(depth, 2) + 0.1571*depth - 0.5696;
+		double x = 0.0003*pow(depth, 2) + 0.1489*depth - 0.1885;
 		return x;
 	}
 
 	double third_order_4(double depth)
 	{
 		if (depth == 0) { return 0.0; }
-		double x = -0.0000*pow(depth, 3) + 0.0017*pow(depth, 2) + 0.0507*depth - 1.7977;
+		double x = -0.0000*pow(depth, 3) + 0.0009*pow(depth, 2) + 0.1071*depth + 0.7241;
 		return x;
 	}
 
@@ -320,12 +320,12 @@ private:
 									if (stack > max_counter) { max_counter = stack; }
 								}
 								ratio = max_counter / StepSlide;
-								double dimen = second_order_4(depth[0]);
+								double dimen = third_order_4(depth[0]);
 								temp_height += ratio * dimen;
 							}
 							else
 							{
-								double dimen = second_order_4(depth[0]);
+								double dimen = third_order_4(depth[0]);
 								temp_height += dimen;
 							}
 
@@ -369,13 +369,13 @@ private:
 									if (stack > max_counter) { max_counter = stack; }
 								}
 								ratio = max_counter / StepSlide;
-								double dimen = second_order_4(depth[0]);
+								double dimen = third_order_4(depth[0]);
 								temp_height += ratio * dimen;
 							}
 						}
 					}
 					if (temp_height > obj_height_max[i]) { obj_height_max[i] = temp_height; }
-					if (temp_height < obj_height_min[i]) { obj_height_min[i] = temp_height; }
+					if (temp_height < obj_height_min[i] && temp_height != 0 ) { obj_height_min[i] = temp_height; }
 				}
 			}
 		}
@@ -435,14 +435,14 @@ private:
 									if (stack > max_counter) { max_counter = stack; }
 								}
 								ratio = max_counter / StepSlide;
-								double dimen = second_order_4(depth[0]);
+								double dimen = third_order_4(depth[0]);
 								temp_width += ratio * dimen;
 								//cout << "depth is " << depth[0] << ", dimen is " << dimen << ", ratio is " << ratio << endl;
 								//cout << "temp width now " << temp_width << endl;
 							}
 							else
 							{
-								double dimen = second_order_4(depth[0]);
+								double dimen = third_order_4(depth[0]);
 								temp_width += dimen;
 								//cout << "depth is " << depth[0] << ", dimen is " << dimen << ", ratio is " << ratio << endl;
 								//cout << "temp width now " << temp_width << endl;
@@ -488,7 +488,7 @@ private:
 									if (stack > max_counter) { max_counter = stack; }
 								}
 								ratio = max_counter / StepSlide;
-								double dimen = second_order_4(depth[0]);
+								double dimen = third_order_4(depth[0]);
 								temp_width += ratio * dimen;
 								//cout << "depth is " << depth[0] << ", dimen is " << dimen << ", ratio is " << ratio << endl;
 								//cout << "temp width now " << temp_width << endl;
@@ -496,7 +496,7 @@ private:
 						}
 					}
 					if (temp_width > obj_width_max[i]) { obj_width_max[i] = temp_width; }
-					if (temp_width < obj_width_min[i]) { obj_width_min[i] = temp_width; }
+					if (temp_width < obj_width_min[i] && temp_width!=0) { obj_width_min[i] = temp_width; }
 				}
 			}
 		}
@@ -504,6 +504,7 @@ private:
 
 	void deter_obj_area_basic()
 	{
+		cout << "Basic Area Estimation" << endl;
 		for (short obj = 0; obj <= objcounter; obj++)
 		{
 			for (short col = obj_coords_min[obj].x; col <= obj_coords_max[obj].x; col++)
@@ -513,7 +514,7 @@ private:
 					if (block_matrix.get_label_block_row_cols(row, col) == obj)
 					{
 						Scalar depth = block_matrix.get_average_distance_block_row_cols(row, col);
-						obj_area[obj] += pow(first_order_4(depth[0]), 2);
+						obj_area[obj] += pow(third_order_4(depth[0]), 2);
 					}
 				}
 			}
@@ -522,6 +523,7 @@ private:
 
 	void deter_obj_area_inter()
 	{
+		cout << "Adv Area Estimation" << endl;
 		Mat depth_image = imread("processed_depth_image.png", IMREAD_GRAYSCALE); //stores the image data into opencv matrix object
 
 		for (short obj = 0; obj <= objcounter; obj++)
@@ -538,13 +540,14 @@ private:
 			
 
 
-			for (short col = rowmin; col <= rowmax; col++)
+			for (short col = colmin; col <= colmax; col++)
 			{
 				for (short row = rowmin; row <= rowmax; row++)
 				{
 					if (block_matrix.get_label_block_row_cols(row, col) == obj)
 					{
-						cout << "block " << row << "," << col << endl;
+						//cout << "block " << row << "," << col << ": average depth is " << block_matrix.get_average_distance_block_row_cols(row, col) << endl;
+
 						bool edge_flag = false;
 						
 						//Is block at the edge of the object
@@ -553,8 +556,8 @@ private:
 							if (block_matrix.get_label_block_row_cols(row - 1, col) != obj)
 							{
 								edge_flag = true;
-								cout << "block " << row << "," << col << " is at the edge of object " << obj << endl;
-								cout << "block homogeniety " << block_matrix.get_block_homflag_row_cols(row, col) << endl;
+								//cout << "block " << row << "," << col << " is at the edge of object " << obj << endl;
+								//cout << "block homogeniety " << block_matrix.get_block_homflag_row_cols(row, col) << endl;
 							}
 						}
 						if (row + 1 != depth_image.rows / StepSlide)
@@ -562,8 +565,8 @@ private:
 							if (block_matrix.get_label_block_row_cols(row + 1, col) != obj)
 							{
 								edge_flag = true;
-								cout << "block " << row << "," << col << " is at the edge of object " << obj << endl;
-								cout << "block homogeniety " << block_matrix.get_block_homflag_row_cols(row, col) << endl;
+								//cout << "block " << row << "," << col << " is at the edge of object " << obj << endl;
+								//cout << "block homogeniety " << block_matrix.get_block_homflag_row_cols(row, col) << endl;
 							}							
 						}
 						if (col - 1 != -1)
@@ -571,8 +574,8 @@ private:
 							if (block_matrix.get_label_block_row_cols(row, col - 1) != obj)
 							{ 
 								edge_flag = true; 
-								cout << "block " << col << "," << row << " is at the edge of object " << obj << endl;
-								cout << "block homogeniety " << block_matrix.get_block_homflag_row_cols(row, col) << endl;
+								//cout << "block " << col << "," << row << " is at the edge of object " << obj << endl;
+								//cout << "block homogeniety " << block_matrix.get_block_homflag_row_cols(row, col) << endl;
 							}							
 						}
 						if (col + 1 != depth_image.cols / StepSlide)
@@ -580,16 +583,17 @@ private:
 							if (block_matrix.get_label_block_row_cols(row, col + 1) != obj)
 							{
 								edge_flag = true;
-								cout << "block " << row << "," << col << " is at the edge of object " << obj << endl;
-								cout << "block homogeniety " << block_matrix.get_block_homflag_row_cols(row, col) << endl;
+								//cout << "block " << row << "," << col << " is at the edge of object " << obj << endl;
+								//cout << "block homogeniety " << block_matrix.get_block_homflag_row_cols(row, col) << endl;
 							}
 						}
 
 						Scalar depth = block_matrix.get_average_distance_block_row_cols(row, col);
+						bool block_hom = block_matrix.get_block_homflag_row_cols(row, col);
 
-						if (edge_flag==true && block_matrix.get_block_homflag_row_cols(row, col)==false)
+						if (edge_flag == true && block_hom == false)
 						{
-							cout << "entered inspection function" << endl;
+							//cout << "entered inspection function" << endl;
 							//cout << "edge block" << endl;
 							short counter = 0;
 							for (short sub_row = (row*StepSlide); sub_row < (row*StepSlide + StepSlide); sub_row++)
@@ -608,20 +612,20 @@ private:
 							}
 
 							double ratio = counter / pow(StepSlide, 2);
-							obj_area[obj] += (ratio * pow(first_order_4(depth[0]), 2));
-							cout << "Counter is " << counter << ", ratio is " << ratio << ", added area is " << ratio * pow(first_order_4(depth[0]), 2) << endl;
+							obj_area[obj] += (ratio * pow(third_order_4(depth[0]), 2));
+							//cout << "Counter is " << counter << ", ratio is " << ratio << ", added area is " << ratio * pow(first_order_4(depth[0]), 2) << endl;
 							//cout << ratio * pow(first_order_4(depth[0]), 2) << endl;
 						}
 						else
 						{
-							cout << "entered default function" << endl;
+							//cout << "entered default function" << endl;
 							//cout << "not edge block" << endl;
-							obj_area[obj] += pow(first_order_4(depth[0]), 2);
-							cout << "Added area is " << pow(first_order_4(depth[0]), 2) << endl;
+							obj_area[obj] += pow(third_order_4(depth[0]), 2);
+							//cout << "Added area is " << pow(first_order_4(depth[0]), 2) << endl;
 							//cout << pow(first_order_4(depth[0]), 2) << endl;
 						}
-						cout << "Current object area is " << obj_area[obj] << endl;
-						cout << endl;
+						//cout << "Current object area is " << obj_area[obj] << endl;
+						//cout << endl;
 						
 					}
 					else
@@ -661,8 +665,10 @@ private:
 								depth = block_matrix.get_average_distance_block_row_cols(row, col + 1);
 							}
 						}
+
+						bool block_hom = block_matrix.get_block_homflag_row_cols(row, col);
 						
-						if (adj_flag) //&& block_matrix.get_block_homflag_row_cols(row,col)!=true)
+						if (adj_flag==true && block_hom == false)
 						{
 							//cout << "adjacent block" << endl;
 							short counter = 0;
@@ -676,7 +682,7 @@ private:
 								}
 							}
 							double ratio = counter / pow(StepSlide, 2);
-							obj_area[obj] += ratio * pow(first_order_4(depth[0]), 2);
+							obj_area[obj] += ratio * pow(third_order_4(depth[0]), 2);
 							//cout << ratio * pow(first_order_4(depth[0]), 2) << endl;
 						}
 					}
