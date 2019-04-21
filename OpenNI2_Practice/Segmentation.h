@@ -251,7 +251,7 @@ private:
 	{
 		//0.2393   -1.8726
 		if (depth == 0) { return 0.0; }
-		double x = 0.1906*depth - 1.5882;
+		double x = 0.1856*depth - 1.7882;//1.5882;
 		return x;
 	}
 
@@ -320,12 +320,12 @@ private:
 									if (stack > max_counter) { max_counter = stack; }
 								}
 								ratio = max_counter / StepSlide;
-								double dimen = third_order_4(depth[0]);
+								double dimen = first_order_4(depth[0]);
 								temp_height += ratio * dimen;
 							}
 							else
 							{
-								double dimen = third_order_4(depth[0]);
+								double dimen = first_order_4(depth[0]);
 								temp_height += dimen;
 							}
 
@@ -369,7 +369,7 @@ private:
 									if (stack > max_counter) { max_counter = stack; }
 								}
 								ratio = max_counter / StepSlide;
-								double dimen = third_order_4(depth[0]);
+								double dimen = first_order_4(depth[0]);
 								temp_height += ratio * dimen;
 							}
 						}
@@ -435,14 +435,14 @@ private:
 									if (stack > max_counter) { max_counter = stack; }
 								}
 								ratio = max_counter / StepSlide;
-								double dimen = third_order_4(depth[0]);
+								double dimen = first_order_4(depth[0]);
 								temp_width += ratio * dimen;
 								//cout << "depth is " << depth[0] << ", dimen is " << dimen << ", ratio is " << ratio << endl;
 								//cout << "temp width now " << temp_width << endl;
 							}
 							else
 							{
-								double dimen = third_order_4(depth[0]);
+								double dimen = first_order_4(depth[0]);
 								temp_width += dimen;
 								//cout << "depth is " << depth[0] << ", dimen is " << dimen << ", ratio is " << ratio << endl;
 								//cout << "temp width now " << temp_width << endl;
@@ -488,7 +488,7 @@ private:
 									if (stack > max_counter) { max_counter = stack; }
 								}
 								ratio = max_counter / StepSlide;
-								double dimen = third_order_4(depth[0]);
+								double dimen = first_order_4(depth[0]);
 								temp_width += ratio * dimen;
 								//cout << "depth is " << depth[0] << ", dimen is " << dimen << ", ratio is " << ratio << endl;
 								//cout << "temp width now " << temp_width << endl;
@@ -514,7 +514,7 @@ private:
 					if (block_matrix.get_label_block_row_cols(row, col) == obj)
 					{
 						Scalar depth = block_matrix.get_average_distance_block_row_cols(row, col);
-						obj_area[obj] += pow(third_order_4(depth[0]), 2);
+						obj_area[obj] += pow(first_order_4(depth[0]), 2);
 					}
 				}
 			}
@@ -612,7 +612,7 @@ private:
 							}
 
 							double ratio = counter / pow(StepSlide, 2);
-							obj_area[obj] += (ratio * pow(third_order_4(depth[0]), 2));
+							obj_area[obj] += (ratio * pow(first_order_4(depth[0]), 2));
 							//cout << "Counter is " << counter << ", ratio is " << ratio << ", added area is " << ratio * pow(first_order_4(depth[0]), 2) << endl;
 							//cout << ratio * pow(first_order_4(depth[0]), 2) << endl;
 						}
@@ -620,7 +620,7 @@ private:
 						{
 							//cout << "entered default function" << endl;
 							//cout << "not edge block" << endl;
-							obj_area[obj] += pow(third_order_4(depth[0]), 2);
+							obj_area[obj] += pow(first_order_4(depth[0]), 2);
 							//cout << "Added area is " << pow(first_order_4(depth[0]), 2) << endl;
 							//cout << pow(first_order_4(depth[0]), 2) << endl;
 						}
@@ -682,7 +682,7 @@ private:
 								}
 							}
 							double ratio = counter / pow(StepSlide, 2);
-							obj_area[obj] += ratio * pow(third_order_4(depth[0]), 2);
+							obj_area[obj] += ratio * pow(first_order_4(depth[0]), 2);
 							//cout << ratio * pow(first_order_4(depth[0]), 2) << endl;
 						}
 					}
