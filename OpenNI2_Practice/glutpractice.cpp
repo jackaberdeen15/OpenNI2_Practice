@@ -9,10 +9,10 @@
 using namespace openni;
 
 //NiTE2 Headers
-#include <NiTE.h>
+//#include <NiTE.h>
 
 //GLUT headers
-#include<GL/glut.h>
+//#include<GL/glut.h>
 
 /*
 void gl_KeyboardCallBack(unsigned char key, int x, int y)

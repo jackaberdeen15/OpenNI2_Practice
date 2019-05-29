@@ -23,7 +23,7 @@
     <ProjectGuid>{286D9533-14A9-4EF4-ACD0-97DA05BD0DE6}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>OpenNI2Practice</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -118,18 +118,17 @@ xcopy "C:\glut\glut32.dll" "$(OutDir)" /y /d</Command>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\opencv\opencv\build\include;c:\glut;$(OPENNI2_INCLUDE64);$(OPENCV_DIR)\include;$(NITE2_INCLUDE64);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\opencv-343\opencv\build\include;$(OPENNI2_INCLUDE64);$(OPENCV_DIR)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\opencv\opencv\build\x64\vc15\lib;C:\glut;$(NITE2_LIB64);$(OPENNI2_LIB64);$(OPENCV_DIR)\x64\vc15\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>OpenNI2.lib;NiTE2.lib;glut64.lib;opencv_world343d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files\opencv-343\opencv\build\x64\vc15\lib;$(OPENNI2_LIB64);$(OPENCV_DIR)\x64\vc15\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenNI2.lib;opencv_world343d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "%OPENNI2_REDIST64%*" "$(OutDir)" /y /s /e /i /d
-xcopy "%NITE2_REDIST64%*" "$(OutDir)" /y /s /e /i /d
-xcopy "C:\glut\glut64.dll" "$(OutDir)" /y /d
+
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
