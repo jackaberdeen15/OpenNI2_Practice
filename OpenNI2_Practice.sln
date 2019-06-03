@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28010.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenNI2_Practice", "OpenNI2_Practice\OpenNI2_Practice.vcxproj", "{286D9533-14A9-4EF4-ACD0-97DA05BD0DE6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MappingComponent", "MappingComponent\MappingComponent.vcxproj", "{7C0B5820-7EBE-44B4-AFD2-34BB935B9511}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{286D9533-14A9-4EF4-ACD0-97DA05BD0DE6}.Release|x64.Build.0 = Release|x64
 		{286D9533-14A9-4EF4-ACD0-97DA05BD0DE6}.Release|x86.ActiveCfg = Release|Win32
 		{286D9533-14A9-4EF4-ACD0-97DA05BD0DE6}.Release|x86.Build.0 = Release|Win32
+		{7C0B5820-7EBE-44B4-AFD2-34BB935B9511}.Debug|x64.ActiveCfg = Debug|x64
+		{7C0B5820-7EBE-44B4-AFD2-34BB935B9511}.Debug|x64.Build.0 = Debug|x64
+		{7C0B5820-7EBE-44B4-AFD2-34BB935B9511}.Debug|x86.ActiveCfg = Debug|Win32
+		{7C0B5820-7EBE-44B4-AFD2-34BB935B9511}.Debug|x86.Build.0 = Debug|Win32
+		{7C0B5820-7EBE-44B4-AFD2-34BB935B9511}.Release|x64.ActiveCfg = Release|x64
+		{7C0B5820-7EBE-44B4-AFD2-34BB935B9511}.Release|x64.Build.0 = Release|x64
+		{7C0B5820-7EBE-44B4-AFD2-34BB935B9511}.Release|x86.ActiveCfg = Release|Win32
+		{7C0B5820-7EBE-44B4-AFD2-34BB935B9511}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -246,7 +246,7 @@ private:
 		return x;
 	}
 
-	//Functions for determining size of blocks (5*5) at certain depths
+	//Functions for determining size of blocks (4*4) at certain depths
 	double first_order_4(double depth)
 	{
 		//0.2393   -1.8726
@@ -1048,6 +1048,7 @@ public:
 
 		remove_non_exi_obj();
 
+		cout << "Number of Objects in Image: " << objcounter << "." << endl;
 		if (print)
 		{
 			printf("Displaying matrix to check filled...\r\n");
